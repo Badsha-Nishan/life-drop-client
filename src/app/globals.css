@@ -1,26 +1,58 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* আমাদের ইউনিক কালার প্যালেটের সাথে সামঞ্জস্যপূর্ণ ব্যাকগ্রাউন্ড ও টেক্সট */
+  --background: #fafafa; /* Soft Cream White */
+  --foreground: #1e293b; /* Slate Dark Text */
+
+  /* ব্র্যান্ডের মূল রঙগুলো CSS ভ্যারিয়েবল হিসেবেও রাখলাম */
+  --brand-primary: #d9383a;
+  --brand-secondary: #fca5a5;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-brand-primary: var(--brand-primary);
+  --color-brand-secondary: var(--brand-secondary);
 }
 
+/* ⚠️ রিকোয়ারমেন্ট অনুযায়ী সিস্টেমে জোরপূর্বক ডার্ক মোড এসে যাতে ডিজাইন নষ্ট না করে, 
+   তাই ডার্ক মোডকেও আমরা আমাদের প্রফেশনাল ও ক্লিন থিমে লক করে দিচ্ছি */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #fafafa;
+    --foreground: #1e293b;
   }
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Oxygen, Ubuntu, Cantarell, sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+  /* স্মুথ স্ক্রোলিং এবং ফন্টকে ক্রিস্পি দেখানোর জন্য */
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* 💡 স্ক্রোলবারের জন্য একটি সুন্দর গ্লোসি ডিজাইন (gobindo look এড়াতে) */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #d9383a; /* স্ক্রোলবারে হোভার করলে আমাদের ব্র্যান্ড কালার আসবে */
 }
