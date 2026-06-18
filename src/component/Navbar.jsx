@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  BarsAscendingAlignRight,
+  Bars,
   CircleXmark,
   ChevronDown,
   ArrowRightFromSquare,
@@ -125,7 +125,7 @@ export default function Navbar() {
               {isOpen ? (
                 <CircleXmark className="w-6 h-6" />
               ) : (
-                <BarsAscendingAlignRight className="w-6 h-6" />
+                <Bars className="w-6 h-6" />
               )}
             </button>
           </div>
