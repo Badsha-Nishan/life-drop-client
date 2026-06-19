@@ -17,7 +17,7 @@ export default function Navbar() {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   // 💡 পরীক্ষার জন্য এই স্টেটটি পরিবর্তন করে দেখতে পারেন (True = logged in, False = logged out)
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(true);
   const [user, setUser] = useState({
     name: "Rahat",
     avatar:
