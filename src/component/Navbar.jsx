@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react"; // 👈 ১. useEffect এবং useRef ইম্পোর্ট করা হয়েছে
 import Link from "next/link";
-import { usePathname } from "next/navigation"; // 👈 ১. usePathname হুক ইম্পোর্ট করা হয়েছে
+import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Bars,
@@ -17,7 +17,8 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
-  const pathname = usePathname(); // 👈 ২. কারেন্ট ইউআরএল পাথ নেওয়ার জন্য ইনিশিয়ালাইজেশন
+  const pathname = usePathname();
+  const dropdownRef = useRef(null); // 👈 ২. ড্রপডাউন এরিয়া ট্র্যাক করার জন্য একটি রেফ (Ref)
 
   const [isLoggedIn, setIsLoggedIn] = useState(true);
   const [user, setUser] = useState({
@@ -26,9 +27,26 @@ export default function Navbar() {
       "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=100&auto=format&fit=crop",
   });
 
+  // 👈 ৩. বাইরে ক্লিক করলে ড্রপডাউন বন্ধ করার লজিক (useEffect)
+  useEffect(() => {
+    function handleClickOutside(event) {
+      // যদি ক্লিকটি ড্রপডাউন কন্টেইনারের বাইরে হয়, তবে ড্রপডাউনটি ক্লোজ হবে
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsProfileOpen(false);
+      }
+    }
+
+    // ব্রাউজারে মাউস ডাউন ইভেন্ট লিসেনার যোগ করা
+    document.addEventListener("mousedown", handleClickOutside);
+
+    // কম্পোনেন্ট আনমাউন্ট হলে ইভেন্ট লিসেনার ক্লিনআপ করা
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   const toggleMenu = () => setIsOpen(!isOpen);
 
-  // 👈 ৩. কোড ক্লিন রাখার জন্য কমন নেভিগেশন অ্যারে তৈরি
   const navLinks = [
     { name: "Home", href: "/" },
     { name: "Donation Requests", href: "/donation-requests" },
@@ -53,19 +71,18 @@ export default function Navbar() {
           {/* Desktop Nav Links */}
           <div className="hidden md:flex items-center gap-8 font-medium text-sm">
             {navLinks.map((link) => {
-              const isActive = pathname === link.href; // 👈 অ্যাক্টিভ চেক
+              const isActive = pathname === link.href;
               return (
                 <Link
                   key={link.href}
                   href={link.href}
                   className={`transition-colors relative py-1 ${
                     isActive
-                      ? "text-brand-primary font-bold" // অ্যাক্টিভ থাকলে এই ক্লাস পাবে
+                      ? "text-brand-primary font-bold"
                       : "text-gray-600 hover:text-brand-primary"
                   }`}
                 >
                   {link.name}
-                  {/* অ্যাক্টিভ লিঙ্কের নিচে একটি মডার্ন আন্ডারলাইন এফেক্ট (ঐচ্ছিক) */}
                   {isActive && (
                     <motion.div
                       layoutId="activeUnderline"
@@ -85,8 +102,9 @@ export default function Navbar() {
                 Login
               </Link>
             ) : (
-              /* User Profile Dropdown */
-              <div className="relative">
+              /* ─── User Profile Dropdown Segment ─── */
+              // 👈 ৪. এখানে ref={dropdownRef} বসানো হয়েছে পুরো এরিয়াটা ট্র্যাক করতে
+              <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setIsProfileOpen(!isProfileOpen)}
                   className="flex items-center gap-2 p-1.5 rounded-xl hover:bg-gray-50 transition-colors"
@@ -114,8 +132,11 @@ export default function Navbar() {
                       <div className="px-3 py-2 text-xs text-gray-400 font-normal">
                         Logged in as {user.name}
                       </div>
+
+                      {/* Dashboard Link (onClick দিয়ে মেনু বন্ধের ব্যবস্থা করা হয়েছে) */}
                       <Link
                         href="/dashboard"
+                        onClick={() => setIsProfileOpen(false)} // 👈 ৫. ক্লিক করলে ড্রপডাউন বন্ধ হবে
                         className={`flex items-center gap-2.5 px-3 py-2 rounded-xl transition-colors ${
                           pathname === "/dashboard"
                             ? "bg-gray-50 text-brand-primary font-bold"
@@ -125,8 +146,13 @@ export default function Navbar() {
                         <LayoutHeaderSideContent className="w-4 h-4 text-gray-400" />{" "}
                         Dashboard
                       </Link>
+
+                      {/* Logout Button */}
                       <button
-                        onClick={() => setIsLoggedIn(false)}
+                        onClick={() => {
+                          setIsLoggedIn(false);
+                          setIsProfileOpen(false); // 👈 ৬. ক্লিক করলে ড্রপডাউন বন্ধ হবে
+                        }}
                         className="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-red-50 text-red-600 transition-colors text-left"
                       >
                         <ArrowRightFromSquare className="w-4 h-4" /> Logout
@@ -154,7 +180,7 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile Drawer with Framer Motion */}
+      {/* Mobile Drawer */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -164,7 +190,6 @@ export default function Navbar() {
             className="md:hidden bg-white border-b border-gray-100 overflow-hidden"
           >
             <div className="px-4 pt-2 pb-6 flex flex-col gap-4 font-medium">
-              {/* 👈 ৪. মোবাইল মেন্যুতেও ডাইনামিক অ্যাক্টিভ স্টেট লুপ */}
               {navLinks.map((link) => {
                 const isActive = pathname === link.href;
                 return (
