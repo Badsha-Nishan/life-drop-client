@@ -167,7 +167,9 @@ export default function MyRequestsPage() {
           >
             <option value="All">All Status</option>
             <option value="Pending">Pending</option>
-            <option value="Accepted">Accepted</option>
+            <option value="Done">Done</option>
+            <option value="InProgress">InProgress</option>
+            <option value="Cancelled">Cancelled</option>
           </select>
         </div>
       </div>

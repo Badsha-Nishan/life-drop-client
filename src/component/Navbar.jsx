@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation"; // 👈 ১. usePathname হুক ইম্পোর্ট করা হয়েছে
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Bars,
@@ -16,7 +17,8 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
-  // 💡 পরীক্ষার জন্য এই স্টেটটি পরিবর্তন করে দেখতে পারেন (True = logged in, False = logged out)
+  const pathname = usePathname(); // 👈 ২. কারেন্ট ইউআরএল পাথ নেওয়ার জন্য ইনিশিয়ালাইজেশন
+
   const [isLoggedIn, setIsLoggedIn] = useState(true);
   const [user, setUser] = useState({
     name: "Rahat",
@@ -25,6 +27,14 @@ export default function Navbar() {
   });
 
   const toggleMenu = () => setIsOpen(!isOpen);
+
+  // 👈 ৩. কোড ক্লিন রাখার জন্য কমন নেভিগেশন অ্যারে তৈরি
+  const navLinks = [
+    { name: "Home", href: "/" },
+    { name: "Donation Requests", href: "/donation-requests" },
+    { name: "Search Donor", href: "/search-donor" },
+    ...(isLoggedIn ? [{ name: "Funding", href: "/funding" }] : []),
+  ];
 
   return (
     <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100 transition-all duration-300">
@@ -41,22 +51,30 @@ export default function Navbar() {
           </Link>
 
           {/* Desktop Nav Links */}
-          <div className="hidden md:flex items-center gap-8 font-medium text-sm text-gray-600">
-            <Link
-              href="/donation-requests"
-              className="hover:text-brand-primary transition-colors"
-            >
-              Donation Requests
-            </Link>
-
-            {isLoggedIn && (
-              <Link
-                href="/funding"
-                className="hover:text-brand-primary transition-colors"
-              >
-                Funding
-              </Link>
-            )}
+          <div className="hidden md:flex items-center gap-8 font-medium text-sm">
+            {navLinks.map((link) => {
+              const isActive = pathname === link.href; // 👈 অ্যাক্টিভ চেক
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`transition-colors relative py-1 ${
+                    isActive
+                      ? "text-brand-primary font-bold" // অ্যাক্টিভ থাকলে এই ক্লাস পাবে
+                      : "text-gray-600 hover:text-brand-primary"
+                  }`}
+                >
+                  {link.name}
+                  {/* অ্যাক্টিভ লিঙ্কের নিচে একটি মডার্ন আন্ডারলাইন এফেক্ট (ঐচ্ছিক) */}
+                  {isActive && (
+                    <motion.div
+                      layoutId="activeUnderline"
+                      className="absolute bottom-0 left-0 right-0 h-[2px] bg-brand-primary rounded-full"
+                    />
+                  )}
+                </Link>
+              );
+            })}
 
             {/* Auth Condition for Desktop */}
             {!isLoggedIn ? (
@@ -98,7 +116,11 @@ export default function Navbar() {
                       </div>
                       <Link
                         href="/dashboard"
-                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-gray-50 text-brand-dark transition-colors"
+                        className={`flex items-center gap-2.5 px-3 py-2 rounded-xl transition-colors ${
+                          pathname === "/dashboard"
+                            ? "bg-gray-50 text-brand-primary font-bold"
+                            : "text-brand-dark hover:bg-gray-50"
+                        }`}
                       >
                         <LayoutHeaderSideContent className="w-4 h-4 text-gray-400" />{" "}
                         Dashboard
@@ -141,23 +163,25 @@ export default function Navbar() {
             exit={{ opacity: 0, height: 0 }}
             className="md:hidden bg-white border-b border-gray-100 overflow-hidden"
           >
-            <div className="px-4 pt-2 pb-6 flex flex-col gap-4 font-medium text-gray-600">
-              <Link
-                href="/donation-requests"
-                onClick={toggleMenu}
-                className="py-2 hover:text-brand-primary transition-colors"
-              >
-                Donation Requests
-              </Link>
-              {isLoggedIn && (
-                <Link
-                  href="/funding"
-                  onClick={toggleMenu}
-                  className="py-2 hover:text-brand-primary transition-colors"
-                >
-                  Funding
-                </Link>
-              )}
+            <div className="px-4 pt-2 pb-6 flex flex-col gap-4 font-medium">
+              {/* 👈 ৪. মোবাইল মেন্যুতেও ডাইনামিক অ্যাক্টিভ স্টেট লুপ */}
+              {navLinks.map((link) => {
+                const isActive = pathname === link.href;
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    onClick={toggleMenu}
+                    className={`py-2 transition-colors ${
+                      isActive
+                        ? "text-brand-primary font-bold"
+                        : "text-gray-600"
+                    }`}
+                  >
+                    {link.name}
+                  </Link>
+                );
+              })}
 
               <hr className="border-gray-100" />
 
@@ -166,7 +190,11 @@ export default function Navbar() {
                   <Link
                     href="/dashboard"
                     onClick={toggleMenu}
-                    className="flex items-center gap-2 py-2 text-brand-dark"
+                    className={`flex items-center gap-2 py-2 transition-colors ${
+                      pathname === "/dashboard"
+                        ? "text-brand-primary font-bold"
+                        : "text-brand-dark"
+                    }`}
                   >
                     <LayoutHeaderSideContent className="w-4 h-4" /> Dashboard
                   </Link>
