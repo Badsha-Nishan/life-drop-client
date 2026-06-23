@@ -9,6 +9,7 @@ import {
   Magnifier,
   TriangleExclamation,
 } from "@gravity-ui/icons";
+import Link from "next/link";
 
 export default function DonationRequestsPage() {
   // ডেমো ডাটাবেজ (এখানে 'pending' এবং 'accepted/gone' মিক্সড ডাটা আছে)
@@ -153,7 +154,7 @@ export default function DonationRequestsPage() {
                 className="bg-white border border-gray-100 rounded-[24px] p-5 flex flex-col gap-5 shadow-sm hover:shadow-md transition-all relative overflow-hidden group"
               >
                 {/* Upper Soft BG Area for Blood Group & Status */}
-                <div className="bg-[#FFF8F6] -mx-5 -mt-5 p-5 flex items-center justify-between border-b border-gray-50/50">
+                <div className="bg-[#322fe0] -mx-5 -mt-5 p-5 flex items-center justify-between border-b border-gray-50/50">
                   {/* Blood Group Display Badge */}
                   <div className="bg-white border border-brand-primary/10 text-brand-primary w-14 h-14 rounded-2xl flex items-center justify-center text-xl font-black shadow-sm tracking-tighter">
                     {request.bloodGroup}
@@ -201,13 +202,13 @@ export default function DonationRequestsPage() {
                 </div>
 
                 {/* View Button */}
-                <button
-                  type="button"
+                <Link
+                  href={`/donation-requests/${request.id}`}
                   className="w-full bg-brand-primary text-white text-xs font-black py-3 rounded-xl hover:bg-brand-primary/90 transition-all flex items-center justify-center gap-2 shadow-sm shadow-brand-primary/10 group-hover:gap-3"
                 >
                   View Details
                   <CircleArrowRight className="w-4 h-4 transition-transform" />
-                </button>
+                </Link>
               </div>
             ))}
           </div>
