@@ -3,9 +3,10 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Button, toast } from "@heroui/react"; // Button এবং toast ঠিক রাখা হয়েছে
+import { Button } from "@heroui/react"; // Button এবং toast ঠিক রাখা হয়েছে
 import { Heart, Eye, EyeSlash, ArrowRight } from "@gravity-ui/icons";
 import { authClient } from "@/lib/auth-client"; // আপনার BetterAuth ক্লায়েন্ট
+import toast from "react-hot-toast";
 
 export default function LoginFormClient() {
   const searchParams = useSearchParams();
