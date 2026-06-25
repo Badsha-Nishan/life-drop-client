@@ -10,9 +10,15 @@ import {
   TriangleExclamation,
 } from "@gravity-ui/icons";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { authClient } from "@/lib/auth-client";
 
 export default function DonationRequestsPage() {
-  // ডেমো ডাটাবেজ (এখানে 'pending' এবং 'accepted/gone' মিক্সড ডাটা আছে)
+  const router = useRouter();
+  const { data: session } = authClient.useSession();
+  const isLoggedIn = !!session;
+
+  // ডেমো ডাটাবেজ
   const [requests, setRequests] = useState([
     {
       id: 1,
@@ -22,7 +28,7 @@ export default function DonationRequestsPage() {
       upazila: "Bishwambarpur",
       date: "2026-06-25",
       time: "23:00",
-      status: "pending", // 👈 শুধুমাত্র 'pending' গুলো ফিল্টার হয়ে স্ক্রিনে আসবে
+      status: "pending",
     },
     {
       id: 2,
@@ -62,7 +68,7 @@ export default function DonationRequestsPage() {
       upazila: "Boda",
       date: "2026-06-30",
       time: "14:00",
-      status: "completed", // 👈 এটি পেন্ডিং না হওয়ায় স্ক্রিনে দেখাবে না
+      status: "completed",
     },
     {
       id: 6,
@@ -78,7 +84,6 @@ export default function DonationRequestsPage() {
 
   const [searchTerm, setSearchTerm] = useState("");
 
-  // ─── মূল লজিক: শুধুমাত্র Pending এবং Search এর সাথে মেলা রিকোয়েস্ট ফিল্টার ───
   const pendingRequests = requests.filter((req) => {
     const isPending = req.status === "pending";
     const matchesSearch =
@@ -89,10 +94,20 @@ export default function DonationRequestsPage() {
     return isPending && matchesSearch;
   });
 
+  // ─── লগইন না থাকলে callbackUrl সহ রিডাইরেক্ট করার লজিক ───
+  const handleViewDetails = (e, requestId) => {
+    if (!isLoggedIn) {
+      e.preventDefault();
+      // ইউজার যে পেজে যেতে চেয়েছিল সেই পাথটি কুয়েরি প্যারাম হিসেবে পাঠানো হচ্ছে
+      const targetUrl = `/donation-requests/${requestId}`;
+      router.push(`/login?callbackUrl=${encodeURIComponent(targetUrl)}`);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#FAFBFC] py-10 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto flex flex-col gap-8">
-        {/* ─── Header Section ─── */}
+        {/* Header Section */}
         <div className="text-center max-w-2xl mx-auto flex flex-col gap-2">
           <h2 className="text-3xl font-black text-brand-dark tracking-tight sm:text-4xl">
             Urgent <span className="text-brand-primary">Donation Requests</span>
@@ -103,9 +118,8 @@ export default function DonationRequestsPage() {
           </p>
         </div>
 
-        {/* ─── Search & Quick Stats Bar ─── */}
+        {/* Search Bar */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white border border-gray-100 p-4 rounded-2xl shadow-sm">
-          {/* Search Input */}
           <div className="relative flex items-center w-full sm:max-w-md">
             <span className="absolute left-4 text-gray-400">
               <Magnifier className="w-4 h-4" />
@@ -119,7 +133,6 @@ export default function DonationRequestsPage() {
             />
           </div>
 
-          {/* Quick Counter */}
           <div className="text-xs font-bold text-gray-500 bg-brand-light/50 border border-brand-primary/5 px-4 py-2 rounded-xl">
             Total Active Requests:{" "}
             <span className="text-brand-primary font-black text-sm pl-1">
@@ -128,9 +141,8 @@ export default function DonationRequestsPage() {
           </div>
         </div>
 
-        {/* ─── Main Content Area ─── */}
+        {/* Main Content Area */}
         {pendingRequests.length === 0 ? (
-          /* Empty State */
           <div className="bg-white border border-gray-100 rounded-[28px] p-12 text-center flex flex-col items-center justify-center gap-4 max-w-md mx-auto shadow-sm mt-6">
             <div className="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-500">
               <TriangleExclamation className="w-6 h-6" />
@@ -140,33 +152,27 @@ export default function DonationRequestsPage() {
                 No Pending Requests
               </h4>
               <p className="text-xs text-gray-400 font-medium">
-                There are currently no live or matching blood requests pending
-                at this moment.
+                There are currently no live or matching blood requests pending.
               </p>
             </div>
           </div>
         ) : (
-          /* 📋 Inspired Grid Card Layout */
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-2">
             {pendingRequests.map((request) => (
               <div
                 key={request.id}
                 className="bg-white border border-gray-100 rounded-[24px] p-5 flex flex-col gap-5 shadow-sm hover:shadow-md transition-all relative overflow-hidden group"
               >
-                {/* Upper Soft BG Area for Blood Group & Status */}
                 <div className="bg-[#322fe0] -mx-5 -mt-5 p-5 flex items-center justify-between border-b border-gray-50/50">
-                  {/* Blood Group Display Badge */}
                   <div className="bg-white border border-brand-primary/10 text-brand-primary w-14 h-14 rounded-2xl flex items-center justify-center text-xl font-black shadow-sm tracking-tighter">
                     {request.bloodGroup}
                   </div>
-                  {/* Status Indicator */}
                   <span className="bg-emerald-50 text-emerald-600 text-[10px] font-black tracking-wider uppercase px-2.5 py-1 rounded-md border border-emerald-100 flex items-center gap-1.5 animate-pulse">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                     Live
                   </span>
                 </div>
 
-                {/* Recipient Basic Details */}
                 <div className="flex flex-col gap-0.5">
                   <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
                     Recipient
@@ -176,9 +182,7 @@ export default function DonationRequestsPage() {
                   </h3>
                 </div>
 
-                {/* Meta Information List */}
                 <div className="flex flex-col gap-3 text-xs font-semibold text-gray-600 border-t border-b border-gray-50 py-3.5">
-                  {/* Location Info */}
                   <div className="flex items-start gap-2.5">
                     <LocationArrow className="w-4 h-4 text-brand-primary/60 shrink-0 mt-0.5" />
                     <span className="truncate">
@@ -188,7 +192,6 @@ export default function DonationRequestsPage() {
                       </span>
                     </span>
                   </div>
-                  {/* Date & Time Info */}
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2.5">
                       <Calendar className="w-4 h-4 text-brand-primary/60 shrink-0" />
@@ -201,9 +204,9 @@ export default function DonationRequestsPage() {
                   </div>
                 </div>
 
-                {/* View Button */}
                 <Link
                   href={`/donation-requests/${request.id}`}
+                  onClick={(e) => handleViewDetails(e, request.id)}
                   className="w-full bg-brand-primary text-white text-xs font-black py-3 rounded-xl hover:bg-brand-primary/90 transition-all flex items-center justify-center gap-2 shadow-sm shadow-brand-primary/10 group-hover:gap-3"
                 >
                   View Details

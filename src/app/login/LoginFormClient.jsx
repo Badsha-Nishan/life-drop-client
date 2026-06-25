@@ -3,8 +3,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Input, Button } from "@heroui/react"; // 👈 HeroUI ইম্পোর্টস
+import { useRouter, useSearchParams } from "next/navigation";
+import { Input, Button, toast } from "@heroui/react"; // 👈 HeroUI ইম্পোর্টস
 import {
   Heart,
   Envelope,
@@ -16,6 +16,9 @@ import {
 import { authClient } from "@/lib/auth-client"; // আপনার BetterAuth ক্লায়েন্ট
 
 export default function LoginFormClient() {
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl");
+
   const router = useRouter();
   const [formData, setFormData] = useState({
     email: "",
@@ -43,8 +46,8 @@ export default function LoginFormClient() {
     if (error) {
       setErrorMessage(error.message || "Invalid email or password.");
     } else {
-      alert("Logged in successfully!");
-      router.push("/dashboard"); // সফল লগইনে ড্যাশবোর্ডে পাঠানো
+      toast.success("Logged in successfully!");
+      router.push(callbackUrl || "/dashboard");
       router.refresh();
     }
   };
@@ -132,9 +135,9 @@ export default function LoginFormClient() {
                 onChange={(e) =>
                   setFormData({ ...formData, password: e.target.value })
                 }
-                startContent={
-                  <Lock className="w-4 h-4 text-gray-400 shrink-0" />
-                }
+                // startContent={
+                //   <Lock className="w-4 h-4 text-gray-400 shrink-0" />
+                // }
                 endContent={
                   <button
                     type="button"
