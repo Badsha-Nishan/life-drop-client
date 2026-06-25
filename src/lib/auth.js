@@ -6,25 +6,25 @@ const client = new MongoClient(process.env.MONGODB_URI);
 const db = client.db("lifedrop");
 
 export const auth = betterAuth({
-  // ১. ডাটাবেজ অ্যাডাপ্টার এখানে শেষ (ব্র্যাকেট ক্লোজিং খেয়াল করুন 👇)
   database: mongodbAdapter(db, {
     client,
   }),
 
-  // ২. BetterAuth এর মূল কনফিগারেশন রুট লেভেলে থাকবে (ফ্রি/আলাদাভাবে)
   emailAndPassword: {
     enabled: true,
   },
 
+  // ─── 🎯 কাস্টম ফিল্ড ম্যাপিং (BetterAuth স্ট্রাকচার) ───
   user: {
     fields: {
-      phone: { type: "string", required: true },
-      bloodGroup: { type: "string", required: true },
-      district: { type: "string", required: true },
-      upazila: { type: "string", required: true },
-      role: { type: "string", required: true },
-      status: { type: "string", required: true },
+      phone: { type: "string", required: false },
+      bloodGroup: { type: "string", required: false },
+      district: { type: "string", required: false },
+      upazila: { type: "string", required: false },
+      role: { type: "string", required: false },
+      status: { type: "string", required: false },
     },
+    // 🔥 ফ্রন্টএন্ড থেকে সরাসরি ইনপুট নেওয়ার জন্য এটি ১০০% আবশ্যিক
     additionalFields: [
       "phone",
       "bloodGroup",

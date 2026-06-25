@@ -9,14 +9,13 @@ import {
   CloudArrowUpIn,
   FileCheck,
   ShieldExclamation,
-  PencilToLine, // 👈 নতুন আইকন ইম্পোর্ট করা হয়েছে
+  PencilToLine,
 } from "@gravity-ui/icons";
 
 export default function ProfilePage() {
-  // ১. এডিট স্টেট কন্ট্রোল করার জন্য নতুন স্টেট
   const [isEditing, setIsEditing] = useState(false);
 
-  // ডেমো ইউজার ডাটা ও স্টেট ম্যানেজমেন্ট
+  // মূল প্রোফাইল স্টেট
   const [profile, setProfile] = useState({
     name: "Admin User",
     email: "donor@gmail.com",
@@ -29,10 +28,47 @@ export default function ProfilePage() {
     isAvailable: true,
   });
 
+  // ক্যানসেল করলে আগের ডেটা ফিরিয়ে আনার জন্য ব্যাকআপ স্টেট
+  const [backupProfile, setBackupProfile] = useState({ ...profile });
+
+  // এডিট মোড টগল হ্যান্ডলার
+  const handleEditToggle = () => {
+    if (!isEditing) {
+      // এডিট শুরু করার সময় বর্তমান ডেটা ব্যাকআপে রাখছি
+      setBackupProfile({ ...profile });
+    } else {
+      // ক্যানসেল করার সময় ব্যাকআপ ডেটা ফিরিয়ে দিচ্ছি
+      setProfile({ ...backupProfile });
+    }
+    setIsEditing(!isEditing);
+  };
+
+  // সব ইনপুট ফিল্ডের কমন চেঞ্জ হ্যান্ডলার
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setProfile((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  // ইমেজ আপলোড ও প্রিভিউ হ্যান্ডলার
+  const handleImageChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const imageUrl = URL.createObjectURL(file);
+      setProfile((prev) => ({
+        ...prev,
+        avatar: imageUrl,
+      }));
+    }
+  };
+
   // ফর্ম সাবমিট হ্যান্ডলার
   const handleSave = (e) => {
     e.preventDefault();
-    setIsEditing(false); // 👈 সেভ হওয়ার পর এডিট মোড বন্ধ হবে
+    setIsEditing(false);
+    // এখানে আপনি চাইলে আপনার API কল বা ব্যাকএন্ডে ডেটা পাঠানোর লজিক লিখতে পারেন
     alert("Profile configurations saved successfully!");
   };
 
@@ -50,10 +86,10 @@ export default function ProfilePage() {
           </p>
         </div>
 
-        {/* 👈 ২. ডাইনামিক এডিট/ক্যান্সেল বাটন */}
+        {/* ডাইনামিক এডিট/ক্যান্সেল বাটন */}
         <button
           type="button"
-          onClick={() => setIsEditing(!isEditing)}
+          onClick={handleEditToggle}
           className={`flex items-center gap-2 text-xs font-bold px-4 py-2.5 rounded-xl border transition-all ${
             isEditing
               ? "bg-red-50 border-red-200 text-red-600 hover:bg-red-100/70"
@@ -78,12 +114,17 @@ export default function ProfilePage() {
                 alt={profile.name}
                 className="w-full h-full object-cover"
               />
-              {/* ৩. শুধুমাত্র এডিট মোডে ইমেজ আপলোড অপশন কাজ করবে */}
+              {/* শুধুমাত্র এডিট মোডে ইমেজ আপলোড অপশন কাজ করবে */}
               {isEditing && (
                 <label className="absolute inset-0 bg-brand-dark/50 flex flex-col items-center justify-center text-white transition-opacity cursor-pointer text-[10px] font-bold gap-1 animate-fade-in">
                   <CloudArrowUpIn className="w-4 h-4" />
                   Upload
-                  <input type="file" accept="image/*" className="hidden" />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleImageChange}
+                  />
                 </label>
               )}
             </div>
@@ -119,12 +160,15 @@ export default function ProfilePage() {
               </p>
             </div>
 
-            {/* Custom Toggle Switch (এডিট মোড ছাড়া ডিজেবল থাকবে) */}
+            {/* Custom Toggle Switch */}
             <button
               type="button"
               disabled={!isEditing}
               onClick={() =>
-                setProfile({ ...profile, isAvailable: !profile.isAvailable })
+                setProfile((prev) => ({
+                  ...prev,
+                  isAvailable: !prev.isAvailable,
+                }))
               }
               className={`w-11 h-6 rounded-full p-1 transition-colors duration-200 focus:outline-none ${
                 profile.isAvailable ? "bg-green-500" : "bg-gray-200"
@@ -161,11 +205,10 @@ export default function ProfilePage() {
                 </span>
                 <input
                   type="text"
+                  name="name"
                   value={profile.name}
-                  disabled={!isEditing} // 👈 ৪. এডিট মোডের ওপর ভিত্তি করে লক/আনলক
-                  onChange={(e) =>
-                    setProfile({ ...profile, name: e.target.value })
-                  }
+                  disabled={!isEditing}
+                  onChange={handleChange}
                   className={`w-full border px-11 py-3 rounded-xl text-xs font-semibold transition-all focus:outline-none ${
                     isEditing
                       ? "bg-[#F9FAFC] border-gray-200 text-brand-dark focus:bg-white focus:border-brand-primary"
@@ -187,8 +230,9 @@ export default function ProfilePage() {
                 </span>
                 <input
                   type="email"
+                  name="email"
                   value={profile.email}
-                  disabled // ইমেইল সবসময় লকড থাকবে
+                  disabled
                   className="w-full bg-gray-50 border border-gray-100 px-11 py-3 rounded-xl text-xs font-bold text-gray-400 cursor-not-allowed"
                 />
               </div>
@@ -205,11 +249,10 @@ export default function ProfilePage() {
                 </span>
                 <input
                   type="text"
+                  name="district"
                   value={profile.district}
-                  disabled={!isEditing} // 👈 লক/আনলক কন্ট্রোল
-                  onChange={(e) =>
-                    setProfile({ ...profile, district: e.target.value })
-                  }
+                  disabled={!isEditing}
+                  onChange={handleChange}
                   className={`w-full border px-11 py-3 rounded-xl text-xs font-semibold transition-all focus:outline-none ${
                     isEditing
                       ? "bg-[#F9FAFC] border-gray-200 text-brand-dark focus:bg-white focus:border-brand-primary"
@@ -231,11 +274,10 @@ export default function ProfilePage() {
                 </span>
                 <input
                   type="text"
+                  name="upazila"
                   value={profile.upazila}
-                  disabled={!isEditing} // 👈 লক/আনলক কন্ট্রোল
-                  onChange={(e) =>
-                    setProfile({ ...profile, upazila: e.target.value })
-                  }
+                  disabled={!isEditing}
+                  onChange={handleChange}
                   className={`w-full border px-11 py-3 rounded-xl text-xs font-semibold transition-all focus:outline-none ${
                     isEditing
                       ? "bg-[#F9FAFC] border-gray-200 text-brand-dark focus:bg-white focus:border-brand-primary"
@@ -257,11 +299,10 @@ export default function ProfilePage() {
                 </span>
                 <input
                   type="date"
+                  name="lastDonated"
                   value={profile.lastDonated}
-                  disabled={!isEditing} // 👈 লক/আনলক কন্ট্রোল
-                  onChange={(e) =>
-                    setProfile({ ...profile, lastDonated: e.target.value })
-                  }
+                  disabled={!isEditing}
+                  onChange={handleChange}
                   className={`w-full border px-11 py-3 rounded-xl text-xs font-bold transition-all focus:outline-none ${
                     isEditing
                       ? "bg-[#F9FAFC] border-gray-200 text-brand-dark focus:bg-white focus:border-brand-primary"
@@ -282,7 +323,7 @@ export default function ProfilePage() {
             </p>
           </div>
 
-          {/* ৫. একশন বাটন এরিয়া (শুধুমাত্র এডিট মোডে দৃশ্যমান হবে) */}
+          {/* একশন বাটন এরিয়া (শুধুমাত্র এডিট মোডে দৃশ্যমান হবে) */}
           {isEditing && (
             <div className="flex justify-end pt-2 border-t border-gray-50 animate-fade-in">
               <button

@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react"; // 👈 ১. useEffect এবং useRef ইম্পোর্ট করা হয়েছে
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Bars,
@@ -12,34 +12,29 @@ import {
   LayoutHeaderSideContent,
   Heart,
 } from "@gravity-ui/icons";
+import { authClient } from "@/lib/auth-client"; // 👈 আপনার BetterAuth ক্লায়েন্ট পাথ
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   const pathname = usePathname();
-  const dropdownRef = useRef(null); // 👈 ২. ড্রপডাউন এরিয়া ট্র্যাক করার জন্য একটি রেফ (Ref)
+  const router = useRouter();
+  const dropdownRef = useRef(null);
 
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
-  const [user, setUser] = useState({
-    name: "Rahat",
-    avatar:
-      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=100&auto=format&fit=crop",
-  });
+  // ─── BetterAuth হুক দিয়ে সেশন রিড করা ───
+  const { data: session, isPending } = authClient.useSession();
+  const user = session?.user;
+  const isLoggedIn = !!session;
 
-  // 👈 ৩. বাইরে ক্লিক করলে ড্রপডাউন বন্ধ করার লজিক (useEffect)
+  // বাইরে ক্লিক করলে ড্রপডাউন বন্ধ করার লজিক
   useEffect(() => {
     function handleClickOutside(event) {
-      // যদি ক্লিকটি ড্রপডাউন কন্টেইনারের বাইরে হয়, তবে ড্রপডাউনটি ক্লোজ হবে
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsProfileOpen(false);
       }
     }
-
-    // ব্রাউজারে মাউস ডাউন ইভেন্ট লিসেনার যোগ করা
     document.addEventListener("mousedown", handleClickOutside);
-
-    // কম্পোনেন্ট আনমাউন্ট হলে ইভেন্ট লিসেনার ক্লিনআপ করা
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
@@ -47,12 +42,31 @@ export default function Navbar() {
 
   const toggleMenu = () => setIsOpen(!isOpen);
 
+  // সাইন আউট হ্যান্ডলার
+  const handleLogout = async () => {
+    await authClient.signOut({
+      fetchOptions: {
+        onSuccess: () => {
+          setIsProfileOpen(false);
+          setIsOpen(false);
+          router.push("/login"); // লগআউটের পর রিডাইরেক্ট
+          router.refresh();
+        },
+      },
+    });
+  };
+
   const navLinks = [
     { name: "Home", href: "/" },
     { name: "Donation Requests", href: "/donation-requests" },
     { name: "Search Donor", href: "/search-donor" },
     ...(isLoggedIn ? [{ name: "Funding", href: "/funding" }] : []),
   ];
+
+  // লোডিং স্টেটে নেভবার ব্লিঙ্ক করা বন্ধ করতে সেফগার্ড (ঐচ্ছিক)
+  if (isPending) {
+    // সেশন চেক হওয়া পর্যন্ত একটি মিনিমাল শান্ত লুক ধরে রাখবে
+  }
 
   return (
     <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100 transition-all duration-300">
@@ -102,16 +116,18 @@ export default function Navbar() {
                 Login
               </Link>
             ) : (
-              /* ─── User Profile Dropdown Segment ─── */
-              // 👈 ৪. এখানে ref={dropdownRef} বসানো হয়েছে পুরো এরিয়াটা ট্র্যাক করতে
+              /* ─── User Profile Dropdown ─── */
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setIsProfileOpen(!isProfileOpen)}
                   className="flex items-center gap-2 p-1.5 rounded-xl hover:bg-gray-50 transition-colors"
                 >
                   <img
-                    src={user.avatar}
-                    alt={user.name}
+                    src={
+                      user?.image ||
+                      "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=100&auto=format&fit=crop"
+                    } // BetterAuth ও MongoDB-তে অ্যাভাটার ফিল্ডটি 'image' নামে থাকে, ব্যাকআপ হিসেবে ডেমো অ্যাভাটার
+                    alt={user?.name || "User"}
                     className="w-9 h-9 rounded-lg object-cover ring-2 ring-brand-primary/20"
                   />
                   <ChevronDown
@@ -129,31 +145,31 @@ export default function Navbar() {
                       exit={{ opacity: 0, y: 10 }}
                       className="absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-xl border border-gray-100 p-2 flex flex-col gap-1"
                     >
-                      <div className="px-3 py-2 text-xs text-gray-400 font-normal">
-                        Logged in as {user.name}
+                      <div className="px-3 py-2 text-xs text-gray-400 font-normal truncate">
+                        Logged in as{" "}
+                        <span className="font-bold text-brand-dark">
+                          {user?.name}
+                        </span>
                       </div>
 
-                      {/* Dashboard Link (onClick দিয়ে মেনু বন্ধের ব্যবস্থা করা হয়েছে) */}
+                      {/* Dashboard Link */}
                       <Link
                         href="/dashboard"
-                        onClick={() => setIsProfileOpen(false)} // 👈 ৫. ক্লিক করলে ড্রপডাউন বন্ধ হবে
+                        onClick={() => setIsProfileOpen(false)}
                         className={`flex items-center gap-2.5 px-3 py-2 rounded-xl transition-colors ${
                           pathname === "/dashboard"
                             ? "bg-gray-50 text-brand-primary font-bold"
                             : "text-brand-dark hover:bg-gray-50"
                         }`}
                       >
-                        <LayoutHeaderSideContent className="w-4 h-4 text-gray-400" />{" "}
+                        <LayoutHeaderSideContent className="w-4 h-4 text-gray-400" />
                         Dashboard
                       </Link>
 
                       {/* Logout Button */}
                       <button
-                        onClick={() => {
-                          setIsLoggedIn(false);
-                          setIsProfileOpen(false); // 👈 ৬. ক্লিক করলে ড্রপডাউন বন্ধ হবে
-                        }}
-                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-red-50 text-red-600 transition-colors text-left"
+                        onClick={handleLogout}
+                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-red-50 text-red-600 transition-colors text-left font-medium"
                       >
                         <ArrowRightFromSquare className="w-4 h-4" /> Logout
                       </button>
@@ -212,6 +228,20 @@ export default function Navbar() {
 
               {isLoggedIn ? (
                 <>
+                  <div className="flex items-center gap-3 px-2 py-1">
+                    <img
+                      src={
+                        user?.image ||
+                        "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=100&auto=format&fit=crop"
+                      }
+                      alt={user?.name || "User"}
+                      className="w-8 h-8 rounded-lg object-cover"
+                    />
+                    <div className="text-xs text-gray-400 truncate">
+                      {user?.email}
+                    </div>
+                  </div>
+
                   <Link
                     href="/dashboard"
                     onClick={toggleMenu}
@@ -224,11 +254,8 @@ export default function Navbar() {
                     <LayoutHeaderSideContent className="w-4 h-4" /> Dashboard
                   </Link>
                   <button
-                    onClick={() => {
-                      setIsLoggedIn(false);
-                      toggleMenu();
-                    }}
-                    className="flex items-center gap-2 py-2 text-red-600 text-left"
+                    onClick={handleLogout}
+                    className="flex items-center gap-2 py-2 text-red-600 text-left font-medium"
                   >
                     <ArrowRightFromSquare className="w-4 h-4" /> Logout
                   </button>

@@ -1,7 +1,9 @@
-import { createAuthClient } from "better-auth/react";
-export const authClient = createAuthClient({
-  /** The base URL of the server (optional if you're using the same domain) */
-  baseURL: process.env.BETTER_AUTH_URL,
-});
+import { createAuthClient } from "better-auth/react"; // বা vanilla/next-plugins যা ব্যবহার করছেন
 
-export const { signIn, signUp, useSession } = createAuthClient();
+export const authClient = createAuthClient({
+  baseUrl: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+  // 💡 ক্লায়েন্টকেও বলে দিন যে আমরা এই কাস্টম ফিল্ডগুলো নিয়ে কাজ করছি
+  user: {
+    fields: ["phone", "bloodGroup", "district", "upazila", "role", "status"],
+  },
+});

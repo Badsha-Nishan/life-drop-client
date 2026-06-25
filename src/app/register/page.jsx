@@ -15,6 +15,8 @@ import {
 import { authClient } from "@/lib/auth-client";
 import districtData from "@/data/districts.json";
 import upazilaData from "@/data/upazilas.json";
+import { createUsers } from "@/lib/actions/users";
+import { toast } from "@heroui/react";
 
 const bloodGroups = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 
@@ -118,18 +120,28 @@ export default function RegisterPage() {
         email: formData.email,
         password: formData.password,
         name: formData.name,
-        image: formData.avatar, // BetterAuth এর ডিফল্ট প্রোফাইল পিকচার ফিল্ড
+        image: formData.avatar,
+      });
 
-        // আপনার রিকোয়ার্ড কাস্টম মেটাডাটা ফিল্ডসমূহ
+      const newUser = {
+        name: formData.name,
+        email: formData.email,
+        image: formData.avatar,
         phone: formData.phone,
         bloodGroup: formData.bloodGroup,
         district: formData.district,
         upazila: formData.upazila,
-
-        // ডিফল্ট রোল এবং স্ট্যাটাস
         role: "donor",
         status: "active",
-      });
+        createdAt: new Date(),
+      };
+
+      const res = await createUsers(newUser);
+      console.log("createUsers response:", res);
+      if (res.insertedId) {
+        toast.success("Registered");
+        e.target.reset();
+      }
 
       if (error) {
         alert(error.message || "Registration failed!");
@@ -144,7 +156,6 @@ export default function RegisterPage() {
       setIsLoading(false);
     }
   };
-  console.log(formData);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-brand-light/30 via-white to-brand-light/20 px-4 py-16 sm:px-6 lg:px-8 relative overflow-hidden">
