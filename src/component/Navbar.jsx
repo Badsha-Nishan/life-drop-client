@@ -13,6 +13,7 @@ import {
   Heart,
 } from "@gravity-ui/icons";
 import { authClient } from "@/lib/auth-client"; // 👈 আপনার BetterAuth ক্লায়েন্ট পাথ
+import { toast } from "@heroui/react";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -51,6 +52,7 @@ export default function Navbar() {
           setIsOpen(false);
           router.push("/login"); // লগআউটের পর রিডাইরেক্ট
           router.refresh();
+          toast.success("Logout Success!");
         },
       },
     });

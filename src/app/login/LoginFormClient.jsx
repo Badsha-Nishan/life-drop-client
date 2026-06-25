@@ -1,18 +1,10 @@
-// app/login/LoginFormClient.jsx
 "use client";
 
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Input, Button, toast } from "@heroui/react"; // 👈 HeroUI ইম্পোর্টস
-import {
-  Heart,
-  Envelope,
-  Lock,
-  Eye,
-  EyeSlash,
-  ArrowRight,
-} from "@gravity-ui/icons";
+import { Button, toast } from "@heroui/react"; // Button এবং toast ঠিক রাখা হয়েছে
+import { Heart, Eye, EyeSlash, ArrowRight } from "@gravity-ui/icons";
 import { authClient } from "@/lib/auth-client"; // আপনার BetterAuth ক্লায়েন্ট
 
 export default function LoginFormClient() {
@@ -84,10 +76,10 @@ export default function LoginFormClient() {
           </div>
         )}
 
-        {/* Input Form using HeroUI */}
+        {/* Input Form */}
         <form className="mt-6 space-y-5" onSubmit={handleSubmit}>
           <div className="flex flex-col gap-4">
-            {/* Email Input Field via HeroUI */}
+            {/* Email Input Field */}
             <div className="flex flex-col gap-1.5">
               <label
                 htmlFor="email"
@@ -95,29 +87,20 @@ export default function LoginFormClient() {
               >
                 Email Address
               </label>
-              <Input
+              <input
                 id="email"
                 type="email"
-                variant="flat"
                 required
                 placeholder="name@example.com"
                 value={formData.email}
                 onChange={(e) =>
                   setFormData({ ...formData, email: e.target.value })
                 }
-                // startContent={
-                //   <Envelope className="w-4 h-4 text-gray-400 shrink-0" />
-                // }
-                classNames={{
-                  inputWrapper:
-                    "bg-brand-light/60 hover:bg-brand-light/90 focus-within:!bg-white border border-transparent focus-within:!border-brand-primary h-12 rounded-xl transition-all",
-                  input:
-                    "text-sm font-medium text-brand-dark placeholder:text-gray-400",
-                }}
+                className="w-full h-12 px-4 rounded-xl text-sm font-medium text-brand-dark bg-brand-light/60 hover:bg-brand-light/90 focus:bg-white border border-transparent focus:border-brand-primary focus:outline-none placeholder:text-gray-400 transition-all"
               />
             </div>
 
-            {/* Password Input Field via HeroUI */}
+            {/* Password Input Field */}
             <div className="flex flex-col gap-1.5">
               <label
                 htmlFor="password"
@@ -125,51 +108,44 @@ export default function LoginFormClient() {
               >
                 Password
               </label>
-              <Input
-                id="password"
-                type={showPassword ? "text" : "password"}
-                variant="flat"
-                required
-                placeholder="••••••••"
-                value={formData.password}
-                onChange={(e) =>
-                  setFormData({ ...formData, password: e.target.value })
-                }
-                // startContent={
-                //   <Lock className="w-4 h-4 text-gray-400 shrink-0" />
-                // }
-                endContent={
-                  <button
-                    type="button"
-                    onClick={togglePassword}
-                    className="focus:outline-none text-gray-400 hover:text-gray-600 transition-colors"
-                  >
-                    {showPassword ? (
-                      <EyeSlash className="w-4 h-4" />
-                    ) : (
-                      <Eye className="w-4 h-4" />
-                    )}
-                  </button>
-                }
-                classNames={{
-                  inputWrapper:
-                    "bg-brand-light/60 hover:bg-brand-light/90 focus-within:!bg-white border border-transparent focus-within:!border-brand-primary h-12 rounded-xl transition-all",
-                  input:
-                    "text-sm font-medium text-brand-dark placeholder:text-gray-400",
-                }}
-              />
+              <div className="relative flex items-center">
+                <input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  required
+                  placeholder="••••••••"
+                  value={formData.password}
+                  onChange={(e) =>
+                    setFormData({ ...formData, password: e.target.value })
+                  }
+                  className="w-full h-12 pl-4 pr-12 rounded-xl text-sm font-medium text-brand-dark bg-brand-light/60 hover:bg-brand-light/90 focus:bg-white border border-transparent focus:border-brand-primary focus:outline-none placeholder:text-gray-400 transition-all"
+                />
+
+                {/* Password Toggle Button */}
+                <button
+                  type="button"
+                  onClick={togglePassword}
+                  className="absolute right-4 focus:outline-none text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  {showPassword ? (
+                    <EyeSlash className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
+                </button>
+              </div>
             </div>
           </div>
 
-          {/* Action Login Button via HeroUI */}
+          {/* Action Login Button */}
           <div className="pt-2">
             <Button
               type="submit"
               isLoading={isLoading}
-              className="w-full bg-brand-primary text-white font-bold text-sm h-12 rounded-xl shadow-lg shadow-brand-primary/10 hover:opacity-90 active:scale-[0.99] transition-all"
-              endContent={!isLoading && <ArrowRight className="w-4 h-4" />}
+              className="w-full bg-brand-primary text-white font-bold text-sm h-12 rounded-xl shadow-lg shadow-brand-primary/10 hover:opacity-90 active:scale-[0.99] transition-all flex items-center justify-center gap-2"
             >
-              {isLoading ? "Signing in..." : "Sign In"}
+              <span>{isLoading ? "Signing in..." : "Sign In"}</span>
+              {!isLoading && <ArrowRight className="w-4 h-4" />}
             </Button>
           </div>
         </form>

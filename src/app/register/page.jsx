@@ -115,13 +115,18 @@ export default function RegisterPage() {
     setIsLoading(true);
 
     try {
-      // ─── BetterAuth ক্লায়েন্ট সাইড API কল ───
+      // Better Auth Registration
       const { data, error } = await authClient.signUp.email({
         email: formData.email,
         password: formData.password,
         name: formData.name,
         image: formData.avatar,
       });
+
+      if (error) {
+        alert(error.message || "Registration failed!");
+        return;
+      }
 
       const newUser = {
         name: formData.name,
@@ -137,17 +142,31 @@ export default function RegisterPage() {
       };
 
       const res = await createUsers(newUser);
-      console.log("createUsers response:", res);
-      if (res.insertedId) {
-        toast.success("Registered");
-        e.target.reset();
-      }
 
-      if (error) {
-        alert(error.message || "Registration failed!");
-      } else {
-        alert("Registration submitted successfully!");
+      if (res.insertedId) {
+        toast.success("Registration submitted successfully!");
+
         console.log("Registered User Info:", data);
+
+        // Reset form state
+        setFormData({
+          name: "",
+          email: "",
+          phone: "",
+          password: "",
+          confirmPassword: "",
+          avatar: "",
+          bloodGroup: "",
+          district: "",
+          upazila: "",
+        });
+
+        // Reset district/upazila state
+        setSelectedDistrictId("");
+        setFilteredUpazilas([]);
+      } else {
+        alert("Failed to save user information.");
+        console.log("User save response:", res);
       }
     } catch (err) {
       console.error("Registration Submission Error:", err);
