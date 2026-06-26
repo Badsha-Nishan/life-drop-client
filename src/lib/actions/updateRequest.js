@@ -3,7 +3,7 @@
 const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
 
 export const updateRequest = async (requestId, updatedData) => {
-  const res = await fetch(`${baseUrl}/api/donation-request/${requestId}`, {
+  const res = await fetch(`${baseUrl}/api/donation-request/id/${requestId}`, {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
