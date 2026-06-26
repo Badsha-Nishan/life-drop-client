@@ -1,20 +1,35 @@
 // app/dashboard/page.jsx
-import { headers } from "next/headers";
-import { redirect } from "next/navigation";
-import { auth } from "@/lib/auth"; // আপনার ব্যাকএন্ড BetterAuth ইনস্ট্যান্স পাথ
+import { auth } from "@/lib/auth";
 import DashboardClient from "./DashboardClient";
+import { headers } from "next/headers";
 
 export default async function DashboardPage() {
-  // ১. সার্ভার সাইডেই সিকিউরলি সেশন এবং ইউজার ডাটা তুলে আনা
+  // ১. সার্ভার সাইড থেকে সেশন নেওয়া
   const session = await auth.api.getSession({
     headers: await headers(),
   });
 
-  // ২. লগইন করা না থাকলে সরাসরি লগইন পেজে রিডাইরেক্ট করা (প্রোটেকশন)
-  if (!session) {
-    redirect("/login");
+  const user = {
+    name: session?.user?.name || "Guest User",
+    email: session?.user?.email || "",
+  };
+
+  let initialRequests = [];
+
+  if (user?.email) {
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+      // আপনার সেই ফিক্সড এপিআই যা ইমেইল দিয়ে ডেটা এনে দেয়
+      const res = await fetch(`${baseUrl}/api/donation-request/${user.email}`, {
+        cache: "no-store", // রিয়েল-টাইম ডেটার জন্য
+      });
+      if (res.ok) {
+        initialRequests = await res.json();
+      }
+    } catch (error) {
+      console.error("Error fetching dashboard data:", error);
+    }
   }
 
-  // ৩. ইউজারের ডাটা ক্লায়েন্ট কম্পোনেন্টে পাস করা
-  return <DashboardClient user={session.user} />;
+  return <DashboardClient user={user} initialRequests={initialRequests} />;
 }
