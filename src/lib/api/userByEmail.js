@@ -1,8 +1,14 @@
-"use server";
+// src/lib/api/userByEmail.js
 
-const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+export async function getUserByEmail(email) {
+  // ইমেইল না থাকলে এপিআই কল করারই দরকার নেই, সরাসরি null রিটার্ন করবে
+  if (!email || email === "undefined") {
+    console.error("getUserByEmail: Email is missing or undefined!");
+    return null;
+  }
 
-export const getUserByEmail = async (email) => {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:5000";
+
   const res = await fetch(`${baseUrl}/api/users/${email}`, {
     cache: "no-store",
   });
@@ -12,8 +18,5 @@ export const getUserByEmail = async (email) => {
   }
 
   const data = await res.json();
-
-  console.log("Server Response:", data);
-
   return data;
-};
+}

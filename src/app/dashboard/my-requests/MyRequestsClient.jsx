@@ -40,7 +40,7 @@ export default function MyRequestsClient({ user, initialRequests }) {
   // ─── 👁️ View Details Modal States ───
   const [selectedRequest, setSelectedRequest] = useState(null);
 
-  // ─── 📝 Edit Mode States (ডাটাবেজ ফিল্ডের সাথে সামঞ্জস্যপূর্ণ করা হয়েছে) ───
+  // ─── 📝 Edit Mode States ───
   const [isEditing, setIsEditing] = useState(false);
   const [editFormData, setEditFormData] = useState({
     _id: null,
@@ -55,12 +55,14 @@ export default function MyRequestsClient({ user, initialRequests }) {
   const dropdownRef = useRef(null);
   const modalRef = useRef(null);
 
-  // বাইরে ক্লিক করলে ক্লোজ হওয়ার হ্যান্ডলার
+  // বাইরে ক্লিক করলে ক্লোজ হওয়ার হ্যান্ডলার (Robust Fix)
   useEffect(() => {
     function handleClickOutside(event) {
+      // ড্রপডাউন এর বাইরে ক্লিক করলে বন্ধ হবে
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setActiveDropdown(null);
       }
+      // মোডাল এর বাইরে ক্লিক করলে বন্ধ হবে
       if (modalRef.current && !modalRef.current.contains(event.target)) {
         setSelectedRequest(null);
       }
@@ -72,8 +74,7 @@ export default function MyRequestsClient({ user, initialRequests }) {
   // ডিলিট ফাংশন
   const handleDelete = async (id) => {
     if (confirm("Are you sure you want to delete this blood request?")) {
-      const deletePromise = new Promise((resolve, reject) => {
-        // এখানে ফিউচারে ডিলিট API কল করতে পারেন
+      const deletePromise = new Promise((resolve) => {
         setTimeout(() => resolve(true), 1000);
       });
 
@@ -89,7 +90,7 @@ export default function MyRequestsClient({ user, initialRequests }) {
     }
   };
 
-  // এডিট বোতাম ট্রিগার (ডাটাবেজ কী অনুযায়ী ডেটা সেট করা হয়েছে)
+  // এডিট বোতাম ট্রিগার
   const handleEditClick = (req) => {
     setEditFormData({
       _id: req._id,
@@ -116,20 +117,17 @@ export default function MyRequestsClient({ user, initialRequests }) {
     const loadingToast = toast.loading("Updating your request...");
 
     try {
-      // ডাটাবেজের অবজেক্ট ফরম্যাট অনুযায়ী ডেটা রেডি করা হচ্ছে
       const dataToSend = {
         recipientName: editFormData.recipientName,
         recipientDistrict: editFormData.recipientDistrict,
         recipientUpazila: editFormData.recipientUpazila,
         hospitalName: editFormData.hospitalName,
         fullAddress: editFormData.fullAddress,
-        donationStatus: editFormData.donationStatus, // ডাটাবেজে যেভাবে আছে
+        donationStatus: editFormData.donationStatus,
       };
 
-      // প্রথম আর্গুমেন্ট আইডি, দ্বিতীয় আর্গুমেন্ট ডাটা
       const result = await updateRequest(editFormData._id, dataToSend);
 
-      // ব্যাকএন্ড থেকে success: true আসলে স্টেট আপডেট হবে
       if (result && result.success) {
         setAllRequests(
           allRequests.map((item) =>
@@ -147,7 +145,7 @@ export default function MyRequestsClient({ user, initialRequests }) {
     }
   };
 
-  // ফিল্টারিং লজিক (Case-insensitive করা হলো যাতে pending বা Pending দুইটাই কাজ করে)
+  // ফিল্টারিং লজিক
   const filteredRequests = allRequests.filter((req) => {
     if (statusFilter === "All") return true;
     return req.donationStatus?.toLowerCase() === statusFilter.toLowerCase();
@@ -157,10 +155,7 @@ export default function MyRequestsClient({ user, initialRequests }) {
   const totalPages = Math.ceil(totalResults / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = filteredRequests.slice(
-    indexOfFirstItem,
-    indexOfLastItem
-  );
+  const currentItems = filteredRequests.slice(indexOfFirstItem, indexOfLastItem);
 
   const handlePageChange = (pageNumber) => {
     if (pageNumber >= 1 && pageNumber <= totalPages) {
@@ -209,10 +204,7 @@ export default function MyRequestsClient({ user, initialRequests }) {
                   type="text"
                   value={editFormData.recipientName}
                   onChange={(e) =>
-                    setEditFormData({
-                      ...editFormData,
-                      recipientName: e.target.value,
-                    })
+                    setEditFormData({ ...editFormData, recipientName: e.target.value })
                   }
                   required
                   className="w-full bg-[#F8F9FA] border border-gray-100 px-4 py-3.5 rounded-2xl text-xs font-bold text-brand-dark focus:outline-none focus:bg-white focus:border-brand-primary transition-all"
@@ -228,10 +220,7 @@ export default function MyRequestsClient({ user, initialRequests }) {
                   type="text"
                   value={editFormData.recipientDistrict}
                   onChange={(e) =>
-                    setEditFormData({
-                      ...editFormData,
-                      recipientDistrict: e.target.value,
-                    })
+                    setEditFormData({ ...editFormData, recipientDistrict: e.target.value })
                   }
                   required
                   className="w-full bg-[#F8F9FA] border border-gray-100 px-4 py-3.5 rounded-2xl text-xs font-bold text-brand-dark focus:outline-none focus:bg-white focus:border-brand-primary transition-all"
@@ -247,10 +236,7 @@ export default function MyRequestsClient({ user, initialRequests }) {
                   type="text"
                   value={editFormData.recipientUpazila}
                   onChange={(e) =>
-                    setEditFormData({
-                      ...editFormData,
-                      recipientUpazila: e.target.value,
-                    })
+                    setEditFormData({ ...editFormData, recipientUpazila: e.target.value })
                   }
                   required
                   className="w-full bg-[#F8F9FA] border border-gray-100 px-4 py-3.5 rounded-2xl text-xs font-bold text-brand-dark focus:outline-none focus:bg-white focus:border-brand-primary transition-all"
@@ -266,10 +252,7 @@ export default function MyRequestsClient({ user, initialRequests }) {
                   type="text"
                   value={editFormData.hospitalName}
                   onChange={(e) =>
-                    setEditFormData({
-                      ...editFormData,
-                      hospitalName: e.target.value,
-                    })
+                    setEditFormData({ ...editFormData, hospitalName: e.target.value })
                   }
                   required
                   className="w-full bg-[#F8F9FA] border border-gray-100 px-4 py-3.5 rounded-2xl text-xs font-bold text-brand-dark focus:outline-none focus:bg-white focus:border-brand-primary transition-all"
@@ -286,10 +269,7 @@ export default function MyRequestsClient({ user, initialRequests }) {
                 rows={4}
                 value={editFormData.fullAddress}
                 onChange={(e) =>
-                  setEditFormData({
-                    ...editFormData,
-                    fullAddress: e.target.value,
-                  })
+                  setEditFormData({ ...editFormData, fullAddress: e.target.value })
                 }
                 required
                 className="w-full bg-[#F8F9FA] border border-gray-100 px-4 py-3.5 rounded-2xl text-xs font-bold text-brand-dark focus:outline-none focus:bg-white focus:border-brand-primary transition-all resize-none"
@@ -304,10 +284,7 @@ export default function MyRequestsClient({ user, initialRequests }) {
               <select
                 value={editFormData.donationStatus}
                 onChange={(e) =>
-                  setEditFormData({
-                    ...editFormData,
-                    donationStatus: e.target.value,
-                  })
+                  setEditFormData({ ...editFormData, donationStatus: e.target.value })
                 }
                 className="w-full bg-[#F8F9FA] border border-gray-100 px-4 py-3.5 rounded-2xl text-xs font-bold text-brand-dark focus:outline-none focus:bg-white focus:border-brand-primary transition-all"
               >
@@ -422,12 +399,12 @@ export default function MyRequestsClient({ user, initialRequests }) {
                         <td className="px-6 py-5">
                           <span
                             className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide ${
-                              req.donationStatus === "Done"
+                              req.donationStatus?.toLowerCase() === "done"
                                 ? "bg-green-50 text-green-600 border border-green-100"
                                 : "bg-amber-50 text-amber-600 border border-amber-100"
                             }`}
                           >
-                            {req.donationStatus === "Done" ? (
+                            {req.donationStatus?.toLowerCase() === "done" ? (
                               <SealCheck className="w-3 h-3" />
                             ) : (
                               <Clock className="w-3 h-3" />
@@ -439,9 +416,7 @@ export default function MyRequestsClient({ user, initialRequests }) {
                         <td className="px-6 py-5 text-right pr-10 relative">
                           <div
                             className="inline-block"
-                            ref={
-                              activeDropdown === req._id ? dropdownRef : null
-                            }
+                            ref={activeDropdown === req._id ? dropdownRef : null}
                           >
                             <button
                               type="button"
@@ -552,7 +527,7 @@ export default function MyRequestsClient({ user, initialRequests }) {
         </>
       )}
 
-      {/* ─── ৩. View Details Modal Panel ─── */}
+      {/* ─── ৩. View Details Modal Panel (Fixed Syntax Error) ─── */}
       {selectedRequest && (
         <div className="fixed inset-0 bg-brand-dark/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
           <div
@@ -637,26 +612,13 @@ export default function MyRequestsClient({ user, initialRequests }) {
             <div className="bg-amber-50/40 border border-amber-100/60 p-4 rounded-xl flex gap-3 items-start">
               <Bulb className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
               <div className="flex flex-col gap-0.5">
-                <span className="text-[9px] font-black text-amber-800 uppercase tracking-widest">
-                  Message Notes
+                <span className="text-[9px] font-black text-amber-800 uppercase tracking-wider">
+                  Important Note
                 </span>
-                <p className="text-xs italic text-gray-600 font-medium leading-relaxed">
-                  "
-                  {selectedRequest.requestMessage ||
-                    "No custom notes attached."}
-                  "
+                <p className="text-xs font-medium text-gray-500 leading-relaxed">
+                  Please verify the recipient details before proceeding with donation.
                 </p>
               </div>
-            </div>
-
-            <div className="flex justify-end pt-2 border-t border-gray-50">
-              <button
-                type="button"
-                onClick={() => setSelectedRequest(null)}
-                className="bg-brand-dark text-white font-black text-xs px-5 py-2.5 rounded-xl hover:bg-brand-dark/90 transition-all uppercase tracking-wider"
-              >
-                Close View
-              </button>
             </div>
           </div>
         </div>
