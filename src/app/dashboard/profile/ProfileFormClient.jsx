@@ -11,7 +11,7 @@ import {
   ShieldExclamation,
   PencilToLine,
 } from "@gravity-ui/icons";
-import { toast } from "@heroui/react";
+import toast from "react-hot-toast";
 import { updateUser } from "@/lib/actions/updateUser";
 
 export default function ProfileFormClient({ initialUser }) {
