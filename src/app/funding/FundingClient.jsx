@@ -1,0 +1,159 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
+import { FileDollar, ArrowUpRight, ShieldCheck } from "@gravity-ui/icons";
+
+export default function FundingClient({ user, totalFunding, initialHistory }) {
+  const searchParams = useSearchParams();
+  const [loading, setLoading] = useState(false);
+  const [amount, setAmount] = useState(25); // ডিফল্ট ডোনেশন অ্যামাউন্ট
+
+  const isSuccess = searchParams.get("success");
+  const isCanceled = searchParams.get("canceled");
+
+  // ফান্ড দেওয়ার মেইন ফাংশন
+  const handleGiveFund = async () => {
+    setLoading(true);
+    try {
+      const baseUrl =
+        process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:5000";
+      const res = await fetch(`${baseUrl}/api/create-checkout-session`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount: Number(amount),
+          userEmail: user.email,
+          userName: user.name,
+        }),
+      });
+
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url; // স্ট্রাইপের সিকিউর হোস্টেড পেজে রিডাইরেক্ট
+      } else {
+        alert("Failed to initiate payment. Try again.");
+      }
+    } catch (error) {
+      console.error("Payment error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-8 md:px-20 animate-fade-in w-full">
+      {/* ─── TOP SECTION: TITLE & BUTTON ─── */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-black text-brand-dark tracking-tight">
+            LifeDrop Funding
+          </h2>
+          <p className="text-xs text-gray-400 font-medium mt-0.5">
+            Contribute to our foundation and support emergency blood transfers.
+          </p>
+        </div>
+
+        {/* Give Fund Trigger Area */}
+        <div className="flex items-center gap-2 bg-white p-2 rounded-2xl border border-gray-100 shadow-sm">
+          <span className="text-xs font-bold text-gray-400 pl-2">$</span>
+          <input
+            type="number"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            className="w-16 text-sm font-black text-brand-dark outline-none bg-transparent"
+            min="1"
+          />
+          <button
+            onClick={handleGiveFund}
+            disabled={loading}
+            className="flex items-center gap-2 bg-brand-primary hover:bg-brand-primary/90 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition-all shadow-md shadow-brand-primary/10 disabled:opacity-50"
+          >
+            {loading ? "Processing..." : "Give Fund"}
+            <ArrowUpRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
+
+      {/* ─── STATUS TOASTS ─── */}
+      {isSuccess && (
+        <div className="p-4 bg-emerald-50 border border-emerald-100 text-emerald-700 text-xs font-bold rounded-2xl flex items-center gap-2">
+          <ShieldCheck className="w-4 h-4 text-emerald-500" />
+          Thank you! Your donation of ${searchParams.get("amount")} was
+          processed successfully.
+        </div>
+      )}
+      {isCanceled && (
+        <div className="p-4 bg-amber-50 border border-amber-100 text-amber-700 text-xs font-bold rounded-2xl">
+          Payment canceled. No funds were deducted.
+        </div>
+      )}
+
+      {/* ─── STATS CARD (image_e7c27f.png এর মতো ডিজাইন) ─── */}
+      <div className="grid grid-cols-1 md:px-47 gap-6">
+        <div className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-sm flex flex-col gap-4 relative overflow-hidden">
+          <div className="flex items-center justify-between w-full">
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-500 flex items-center justify-center">
+              <FileDollar className="w-5 h-5" />
+            </div>
+            <span className="text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full uppercase tracking-wider">
+              +5%
+            </span>
+          </div>
+          <div className="flex flex-col">
+            <span className="text-xs font-bold text-gray-400">
+              Total Funding
+            </span>
+            <span className="text-2xl font-black text-brand-dark mt-1">
+              ${totalFunding.toLocaleString()}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* ─── FUNDING HISTORY TABLE ─── */}
+      <div className="flex flex-col gap-3 mt-4">
+        <h3 className="text-sm font-black text-brand-dark uppercase tracking-wider">
+          Recent Contributions
+        </h3>
+        <div className="bg-white rounded-[32px] border border-gray-100 shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-gray-50 text-gray-400 text-[10px] font-bold uppercase tracking-widest border-b border-gray-100">
+                  <th className="px-6 py-4">Donor Name</th>
+                  <th className="px-6 py-4">Email Address</th>
+                  <th className="px-6 py-4 text-right">Amount Provided</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50 text-xs font-semibold text-brand-dark">
+                {initialHistory.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan="3"
+                      className="px-6 py-8 text-center text-gray-400 font-medium"
+                    >
+                      No global funding transactions recorded yet.
+                    </td>
+                  </tr>
+                ) : (
+                  initialHistory.map((item) => (
+                    <tr key={item._id} className="hover:bg-brand-light/5">
+                      <td className="px-6 py-4 font-black">{item.userName}</td>
+                      <td className="px-6 py-4 text-gray-400">
+                        {item.userEmail}
+                      </td>
+                      <td className="px-6 py-4 text-right text-emerald-600 font-black">
+                        ${item.amount}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
