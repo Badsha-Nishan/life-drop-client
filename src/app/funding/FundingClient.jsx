@@ -1,18 +1,20 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { FileDollar, ArrowUpRight, ShieldCheck } from "@gravity-ui/icons";
 
 export default function FundingClient({ user, totalFunding, initialHistory }) {
+  console.log("Histity", initialHistory);
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [amount, setAmount] = useState(25); // ডিফল্ট ডোনেশন অ্যামাউন্ট
+  const [amount, setAmount] = useState(25); // ডিফল্ট ইউজার ইনপুট অ্যামাউন্ট
 
   const isSuccess = searchParams.get("success");
   const isCanceled = searchParams.get("canceled");
 
-  // ফান্ড দেওয়ার মেইন ফাংশন
+  // ফান্ড দেওয়ার মেইন ফাংশন
   const handleGiveFund = async () => {
     setLoading(true);
     try {
@@ -30,7 +32,7 @@ export default function FundingClient({ user, totalFunding, initialHistory }) {
 
       const data = await res.json();
       if (data.url) {
-        window.location.href = data.url; // স্ট্রাইপের সিকিউর হোস্টেড পেজে রিডাইরেক্ট
+        window.location.href = data.url; // স্ট্রাইপ পেজে রিডাইরেক্ট
       } else {
         alert("Failed to initiate payment. Try again.");
       }
@@ -41,9 +43,43 @@ export default function FundingClient({ user, totalFunding, initialHistory }) {
     }
   };
 
+  useEffect(() => {
+    const savePayment = async () => {
+      const sessionId = searchParams.get("session_id");
+      const successParam = searchParams.get("success");
+      const amountParam = searchParams.get("amount");
+
+      if (successParam === "true" && sessionId) {
+        try {
+          const baseUrl =
+            process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:5000";
+          const res = await fetch(`${baseUrl}/api/save-funding`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              userName: user.name,
+              userEmail: user.email,
+              amount: amountParam, // 🎯 ফিক্সড: searchParams.get() ব্যবহার করা হলো
+              sessionId: sessionId,
+            }),
+          });
+
+          if (res.ok) {
+            // 🔄 ডাটাবেজে সেভ হওয়ার পর স্ক্রিন রিফ্রেশ করে নতুন ডাটা আনা ও ইউআরএল ক্লিন করা
+            router.replace("/funding");
+            router.refresh();
+          }
+        } catch (err) {
+          console.error("Payment save failed", err);
+        }
+      }
+    };
+    savePayment();
+  }, [searchParams, router, user]);
+
   return (
-    <div className="flex flex-col gap-8 md:px-20 animate-fade-in w-full">
-      {/* ─── TOP SECTION: TITLE & BUTTON ─── */}
+    <div className="flex flex-col gap-8 md:px-20 py-10 animate-fade-in w-full">
+      {/* ─── TOP SECTION ─── */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h2 className="text-2xl font-black text-brand-dark tracking-tight">
@@ -54,7 +90,6 @@ export default function FundingClient({ user, totalFunding, initialHistory }) {
           </p>
         </div>
 
-        {/* Give Fund Trigger Area */}
         <div className="flex items-center gap-2 bg-white p-2 rounded-2xl border border-gray-100 shadow-sm">
           <span className="text-xs font-bold text-gray-400 pl-2">$</span>
           <input
@@ -89,15 +124,15 @@ export default function FundingClient({ user, totalFunding, initialHistory }) {
         </div>
       )}
 
-      {/* ─── STATS CARD (image_e7c27f.png এর মতো ডিজাইন) ─── */}
-      <div className="grid grid-cols-1 md:px-47 gap-6">
+      {/* ─── STATS CARD ─── */}
+      <div className="grid grid-cols-1 gap-6">
         <div className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-sm flex flex-col gap-4 relative overflow-hidden">
           <div className="flex items-center justify-between w-full">
             <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-500 flex items-center justify-center">
               <FileDollar className="w-5 h-5" />
             </div>
             <span className="text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full uppercase tracking-wider">
-              +5%
+              Live
             </span>
           </div>
           <div className="flex flex-col">
@@ -105,7 +140,7 @@ export default function FundingClient({ user, totalFunding, initialHistory }) {
               Total Funding
             </span>
             <span className="text-2xl font-black text-brand-dark mt-1">
-              ${totalFunding.toLocaleString()}
+              ${(totalFunding || 0).toLocaleString()}
             </span>
           </div>
         </div>
@@ -123,31 +158,59 @@ export default function FundingClient({ user, totalFunding, initialHistory }) {
                 <tr className="bg-gray-50 text-gray-400 text-[10px] font-bold uppercase tracking-widest border-b border-gray-100">
                   <th className="px-6 py-4">Donor Name</th>
                   <th className="px-6 py-4">Email Address</th>
+                  <th className="px-6 py-4">Date & Time</th>
                   <th className="px-6 py-4 text-right">Amount Provided</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50 text-xs font-semibold text-brand-dark">
                 {initialHistory.length === 0 ? (
                   <tr>
+                    {/* 🎯 ফিক্স: ৪টি কলামের জন্য colSpan="4" করা হয়েছে */}
                     <td
-                      colSpan="3"
+                      colSpan="4"
                       className="px-6 py-8 text-center text-gray-400 font-medium"
                     >
                       No global funding transactions recorded yet.
                     </td>
                   </tr>
                 ) : (
-                  initialHistory.map((item) => (
-                    <tr key={item._id} className="hover:bg-brand-light/5">
-                      <td className="px-6 py-4 font-black">{item.userName}</td>
-                      <td className="px-6 py-4 text-gray-400">
-                        {item.userEmail}
-                      </td>
-                      <td className="px-6 py-4 text-right text-emerald-600 font-black">
-                        ${item.amount}
-                      </td>
-                    </tr>
-                  ))
+                  initialHistory.map((item) => {
+                    // 📆 ডেট এবং টাইমকে সুন্দরভাবে ফরম্যাট করা হলো (যেমন: Jun 27, 2026 • 02:08 PM)
+                    const displayDate = item.fundingDate
+                      ? `${new Date(item.fundingDate).toLocaleDateString(
+                          "en-US",
+                          {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          }
+                        )} • ${new Date(item.fundingDate).toLocaleTimeString(
+                          "en-US",
+                          {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          }
+                        )}`
+                      : "N/A";
+
+                    return (
+                      <tr key={item._id} className="hover:bg-brand-light/5">
+                        <td className="px-6 py-4 font-black">
+                          {item.userName}
+                        </td>
+                        <td className="px-6 py-4 text-gray-400">
+                          {item.userEmail}
+                        </td>
+                        {/* 🎯 ফরম্যাটেড ডেট এখানে বসানো হলো */}
+                        <td className="px-6 py-4 text-gray-400 font-medium">
+                          {displayDate}
+                        </td>
+                        <td className="px-6 py-4 text-right text-emerald-600 font-black">
+                          ${item.amount}
+                        </td>
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>

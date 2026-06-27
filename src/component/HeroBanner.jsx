@@ -3,12 +3,34 @@ import { Heart, Eye } from "@gravity-ui/icons";
 import StatsCards from "./StatsCards";
 
 export default async function HeroBanner() {
-  // ব্যাকএন্ড থেকে আসা রিয়েল ডাটা (আপাতত হার্ডকোডেড)
-  const stats = {
-    activeDonors: "15+",
-    totalFunding: "$12,886",
-    totalRequests: "19",
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:5000";
+
+  // 🎯 ডিফল্ট সেফ স্টেট (যদি কোনো কারণে ব্যাকঅ্যান্ড ডাউন থাকে)
+  let stats = {
+    activeDonors: "0+",
+    totalFunding: "$0",
+    totalRequests: "0",
   };
+
+  try {
+    // আপনার এক্সপ্রেস ব্যাকঅ্যান্ডের স্ট্যাটস এন্ডপয়েন্টে রিকোয়েস্ট পাঠানো হচ্ছে
+    const res = await fetch(`${baseUrl}/api/admin/stats`, {
+      cache: "no-store", // রিয়েল-টাইম ডাটার জন্য ক্যাশ বন্ধ রাখা হলো
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+
+      // ব্যাকঅ্যান্ড থেকে আসা ডাটা হিরো ব্যানারের ফরম্যাট অনুযায়ী ম্যাপ করা হলো
+      stats = {
+        activeDonors: `${data.totalDonors || 0}+`,
+        totalFunding: `$${(data.totalFunding || 0).toLocaleString()}`,
+        totalRequests: String(data.bloodRequests || 0),
+      };
+    }
+  } catch (error) {
+    console.error("Error fetching stats for HeroBanner:", error);
+  }
 
   return (
     <section className="relative w-full bg-white flex flex-col justify-between">
@@ -16,7 +38,7 @@ export default async function HeroBanner() {
       <div className="relative w-full min-h-[550px] md:min-h-[600px] rounded-b-[40px] md:rounded-b-[60px] flex items-center justify-center px-4 overflow-hidden">
         {/* Next.js Optimized Background Image */}
         <Image
-          src="/hero-image.jpg" // public/ ফোল্ডারে আপনার রাখা ইমেজ পাথ
+          src="/hero-image.jpg"
           alt="Blood Donation Background"
           fill
           priority
@@ -54,7 +76,7 @@ export default async function HeroBanner() {
             </a>
 
             <a
-              href="/search"
+              href="/search-donor"
               className="flex items-center justify-center gap-2 bg-white/20 backdrop-blur-md text-white border border-white/30 font-bold text-sm px-8 py-3.5 rounded-xl hover:bg-white/30 active:scale-98 transition-all w-full sm:w-48"
             >
               Search Donors <Eye className="w-4 h-4 text-white/80" />

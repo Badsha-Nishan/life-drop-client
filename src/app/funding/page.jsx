@@ -5,7 +5,9 @@ import { auth } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
-export default async function FundingPage() {
+export default async function FundingPage({ searchParams }) {
+  const params = await searchParams;
+
   const session = await auth.api.getSession({
     headers: await headers(),
   });
@@ -14,10 +16,10 @@ export default async function FundingPage() {
     redirect("/login");
   }
 
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:5000";
 
-  // ব্যাকএন্ড থেকে টোটাল স্ট্যাটস এবং ফান্ডিং হিস্ট্রি আনা হচ্ছে
-  let stats = { totalFunding: 12895 }; // ডিফল্ট বা হার্ডকোডেড ব্যাকআপ
+  // 🎯 কোনো হার্ডকোডেড ডাটা ছাড়া ডিফল্ট অবজেক্ট রেডি করা হলো
+  let stats = { totalFunding: 0 };
   let history = [];
 
   try {

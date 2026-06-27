@@ -13,7 +13,7 @@ import {
   Heart,
 } from "@gravity-ui/icons";
 import { authClient } from "@/lib/auth-client"; // 👈 আপনার BetterAuth ক্লায়েন্ট পাথ
-import { toast } from "@heroui/react";
+import toast from "react-hot-toast";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
