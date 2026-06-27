@@ -101,7 +101,7 @@ export default function DonationRequestsClient({
                 key={request._id}
                 className="bg-white border border-gray-100 rounded-[24px] p-5 flex flex-col gap-5 shadow-sm hover:shadow-md transition-all relative overflow-hidden group"
               >
-                <div className="bg-[#322fe0] -mx-5 -mt-5 p-5 flex items-center justify-between border-b border-gray-50/50">
+                <div className="bg-purple-200 -mx-5 -mt-5 p-5 flex items-center justify-between border-b border-gray-50/50">
                   <div className="bg-white border border-brand-primary/10 text-brand-primary w-14 h-14 rounded-2xl flex items-center justify-center text-xl font-black shadow-sm tracking-tighter">
                     {request.bloodGroup}
                   </div>

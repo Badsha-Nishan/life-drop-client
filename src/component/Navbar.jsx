@@ -79,7 +79,7 @@ export default function Navbar() {
             <div className="w-10 h-10 rounded-xl bg-brand-primary/10 flex items-center justify-center text-brand-primary group-hover:bg-brand-primary group-hover:text-white transition-all duration-300">
               <Heart className="w-6 h-6" />
             </div>
-            <span className="text-xl font-bold text-brand-dark tracking-tight">
+            <span className="text-xl font-bold text-green-500 tracking-tight">
               Life<span className="text-brand-primary">Drop</span>
             </span>
           </Link>

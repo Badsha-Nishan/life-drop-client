@@ -102,7 +102,7 @@ export default function DashboardLayout({ children }) {
             <div className="w-7 h-7 rounded-lg bg-brand-primary flex items-center justify-center text-white">
               <Heart className="w-4 h-4 fill-white" />
             </div>
-            <span className="text-lg font-black text-brand-dark tracking-tight">
+            <span className="text-lg font-black text-green-500 tracking-tight">
               Life<span className="text-brand-primary">Drop</span>
             </span>
           </Link>

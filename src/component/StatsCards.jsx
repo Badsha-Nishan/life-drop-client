@@ -60,7 +60,7 @@ export default function StatsCards({ rawStats }) {
   return (
     <div className="max-w-6xl mx-auto w-full px-4 -mt-20 sm:-mt-16 relative z-30 grid grid-cols-1 md:grid-cols-3 gap-6">
       {/* Card 1: Active Donors */}
-      <div className="bg-white rounded-3xl p-6 flex flex-col items-center justify-center shadow-xl shadow-gray-200/40 border border-gray-100 min-h-[160px] text-center transition-transform hover:-translate-y-1">
+      <div className="bg-purple-200 rounded-3xl p-6 flex flex-col items-center justify-center shadow-xl shadow-gray-200/40 border border-gray-100 min-h-[160px] text-center transition-transform hover:-translate-y-1">
         <div className="w-10 h-10 bg-brand-primary/10 text-brand-primary rounded-xl flex items-center justify-center mb-3">
           <Person className="w-5 h-5" />
         </div>
@@ -73,7 +73,7 @@ export default function StatsCards({ rawStats }) {
       </div>
 
       {/* Card 2: Total Funding */}
-      <div className="bg-white rounded-3xl p-6 flex flex-col items-center justify-center shadow-xl shadow-gray-200/40 border border-gray-100 min-h-[160px] text-center transition-transform hover:-translate-y-1">
+      <div className="bg-purple-200 rounded-3xl p-6 flex flex-col items-center justify-center shadow-xl shadow-gray-200/40 border border-gray-100 min-h-[160px] text-center transition-transform hover:-translate-y-1">
         <div className="w-10 h-10 bg-brand-primary/5 text-brand-primary rounded-xl flex items-center justify-center mb-3">
           <CircleDollar className="w-5 h-5" />
         </div>
@@ -86,7 +86,7 @@ export default function StatsCards({ rawStats }) {
       </div>
 
       {/* Card 3: Total Requests */}
-      <div className="bg-white rounded-3xl p-6 flex flex-col items-center justify-center shadow-xl shadow-gray-200/40 border border-gray-100 min-h-[160px] text-center transition-transform hover:-translate-y-1">
+      <div className="bg-purple-200 rounded-3xl p-6 flex flex-col items-center justify-center shadow-xl shadow-gray-200/40 border border-gray-100 min-h-[160px] text-center transition-transform hover:-translate-y-1">
         <div className="w-10 h-10 bg-brand-primary/5 text-brand-primary rounded-xl flex items-center justify-center mb-3">
           <Droplet className="w-5 h-5" />
         </div>

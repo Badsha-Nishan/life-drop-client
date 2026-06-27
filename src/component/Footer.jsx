@@ -17,8 +17,8 @@ export default function Footer() {
               <div className="w-9 h-9 rounded-xl bg-brand-primary/10 flex items-center justify-center text-brand-primary group-hover:bg-brand-primary group-hover:text-white transition-all duration-300">
                 <Heart className="w-5 h-5 fill-brand-primary group-hover:fill-white" />
               </div>
-              <span className="text-lg font-bold text-white tracking-tight">
-                Life<span className="text-brand-primary">Flow</span>
+              <span className="text-lg font-bold text-green-500 tracking-tight">
+                Life<span className="text-brand-primary">Drop</span>
               </span>
             </Link>
             <p className="text-sm text-gray-400 leading-relaxed font-normal">

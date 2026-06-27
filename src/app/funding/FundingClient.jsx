@@ -83,7 +83,10 @@ export default function FundingClient({ user, totalFunding, initialHistory }) {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h2 className="text-2xl font-black text-brand-dark tracking-tight">
-            LifeDrop Funding
+            <span className="text-xl font-bold text-green-500 tracking-tight">
+              Life<span className="text-brand-primary">Drop</span>
+            </span>{" "}
+            Funding
           </h2>
           <p className="text-xs text-gray-400 font-medium mt-0.5">
             Contribute to our foundation and support emergency blood transfers.

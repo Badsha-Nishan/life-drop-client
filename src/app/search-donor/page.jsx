@@ -16,22 +16,18 @@ export default function SearchDonorPage() {
 
   const bloodGroups = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 
-  // 🎯 আপনার নির্দিষ্ট জেসন স্ট্রাকচার অনুযায়ী ডাটা এক্সট্রাক্ট করা হলো
   const districts = districtData[2]?.data || [];
   const allUpazilas = upazilaData[2]?.data || [];
-
   const [filteredUpazilas, setFilteredUpazilas] = useState([]);
 
-  // 🔄 ডিস্ট্রিক্ট চেঞ্জ হলে তার ওপর ভিত্তি করে উপজেলা ফিল্টার করার এফেক্ট
+  // 🔄 ডিস্ট্রিক্ট চেঞ্জ হলে উপজেলা ফিল্টার করার এফেক্ট
   useEffect(() => {
     if (district && district !== "Select District") {
-      // প্রথমে সিলেক্টেড ডিস্ট্রিক্টের অবজেক্টটি খুঁজে বের করা (যেন আইডি পাওয়া যায়)
       const selectedDistrictObj = districts.find(
         (d) => d.name.toLowerCase() === district.toLowerCase()
       );
 
       if (selectedDistrictObj) {
-        // ডিস্ট্রিক্টের id ম্যাচ করে অল-উপজেলা থেকে ফিল্টার করা
         const upz = allUpazilas.filter(
           (u) => u.district_id === selectedDistrictObj.id
         );
@@ -42,29 +38,46 @@ export default function SearchDonorPage() {
     } else {
       setFilteredUpazilas([]);
     }
-    setUpazila("Select Upazila"); // ডিস্ট্রিক্ট চেঞ্জ হলে উপজেলা ড্রপডাউন রিসেট
+    setUpazila("Select Upazila");
   }, [district, districts, allUpazilas]);
 
+  // 🎯 ব্যাকএন্ড কল করার মূল ফাংশন
   const handleSearch = async () => {
     setLoading(true);
     setSearched(true);
+
     try {
       const baseUrl =
         process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:5000";
 
-      const queryParams = new URLSearchParams({
-        bloodGroup,
-        district,
-        upazila,
-      }).toString();
+      // 🎯 শুধু যেগুলো ইউজার আসলেই সিলেক্ট করেছে, সেগুলোই অবজেক্টে নিচ্ছি
+      const params = {};
+
+      if (bloodGroup && bloodGroup !== "Select Group") {
+        params.bloodGroup = bloodGroup;
+      }
+
+      if (district && district !== "Select District") {
+        params.district = district;
+      }
+
+      if (upazila && upazila !== "Select Upazila") {
+        params.upazila = upazila;
+      }
+
+      // অবজেক্টটিকে কুয়েরি স্ট্রিং-এ রূপান্তর করছি
+      const queryParams = new URLSearchParams(params).toString();
 
       const res = await fetch(`${baseUrl}/api/search-donors?${queryParams}`);
       if (res.ok) {
         const data = await res.json();
         setDonors(data);
+      } else {
+        setDonors([]);
       }
     } catch (error) {
       console.error("Error searching donors:", error);
+      setDonors([]);
     } finally {
       setLoading(false);
     }
@@ -85,7 +98,7 @@ export default function SearchDonorPage() {
 
         {/* ─── SEARCH PANEL ─── */}
         <div className="w-full bg-white p-4 sm:p-6 rounded-[32px] border border-gray-100 shadow-sm grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
-          {/* Blood Group Select */}
+          {/* Blood Group */}
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-1">
               Blood Group
@@ -104,7 +117,7 @@ export default function SearchDonorPage() {
             </select>
           </div>
 
-          {/* District Select */}
+          {/* District */}
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-1">
               District
@@ -123,7 +136,7 @@ export default function SearchDonorPage() {
             </select>
           </div>
 
-          {/* Upazila Select */}
+          {/* Upazila */}
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-1">
               Upazila
@@ -143,11 +156,11 @@ export default function SearchDonorPage() {
             </select>
           </div>
 
-          {/* Search Trigger Button */}
+          {/* Search Button */}
           <button
             onClick={handleSearch}
             disabled={loading}
-            className="w-full bg-brand-primary hover:bg-brand-primary/90 text-white text-xs font-black h-[44px] rounded-xl transition-all shadow-md shadow-brand-primary/15 flex items-center justify-center gap-2"
+            className="w-full bg-brand-primary hover:bg-brand-primary/90 text-white text-xs font-black h-[44px] rounded-xl transition-all shadow-md shadow-brand-primary/15 flex items-center justify-center gap-2 disabled:opacity-80"
           >
             <Magnifier className="w-4 h-4" />
             {loading ? "Searching..." : "Search Donors"}
@@ -156,8 +169,30 @@ export default function SearchDonorPage() {
 
         {/* ─── DYNAMIC RESULTS / EMPTY STATES ─── */}
         <div className="w-full flex flex-col gap-6 items-center">
+          {/* ⏳ ৪. ডাটা লোড হওয়ার সময়ের কঙ্কাল লোডার (Skeleton Loader) */}
+          {loading && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
+              {[1, 2, 3].map((n) => (
+                <div
+                  key={n}
+                  className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-sm flex flex-col gap-5 animate-pulse"
+                >
+                  <div className="flex justify-between items-center">
+                    <div className="w-12 h-12 bg-gray-200 rounded-full" />
+                    <div className="w-12 h-6 bg-gray-200 rounded-xl" />
+                  </div>
+                  <div className="w-24 h-4 bg-gray-200 rounded" />
+                  <div className="space-y-2 pt-2 border-t border-gray-50">
+                    <div className="w-full h-3 bg-gray-100 rounded" />
+                    <div className="w-2/3 h-3 bg-gray-100 rounded" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
           {/* ১. ইনিশিয়াল স্টেট */}
-          {!searched && (
+          {!searched && !loading && (
             <div className="bg-white/50 border border-dashed border-gray-200 rounded-[32px] p-12 max-w-xl w-full text-center flex flex-col items-center gap-4">
               <div className="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center relative animate-pulse">
                 <div className="w-4 h-4 rounded-full bg-brand-primary absolute -top-1 -right-1 border-2 border-white"></div>
