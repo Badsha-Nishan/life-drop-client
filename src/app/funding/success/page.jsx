@@ -3,8 +3,9 @@
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { ShieldCheck, ArrowLeft, Copy } from "@gravity-ui/icons";
+import { Suspense } from "react";
 
-export default function FundingSuccessPage() {
+function FundingSuccessPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -80,5 +81,13 @@ export default function FundingSuccessPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function FundingSuccess() {
+  return (
+    <Suspense fallback={<p>Loading...</p>}>
+      <FundingSuccessPage></FundingSuccessPage>
+    </Suspense>
   );
 }

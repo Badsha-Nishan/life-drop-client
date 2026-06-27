@@ -1,7 +1,7 @@
-import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import FundingClient from "./FundingClient";
+import { auth } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -21,20 +21,24 @@ export default async function FundingPage() {
   let history = [];
 
   try {
-    const statsRes = await fetch(`${baseUrl}/api/admin/stats`, { cache: "no-store" });
+    const statsRes = await fetch(`${baseUrl}/api/admin/stats`, {
+      cache: "no-store",
+    });
     if (statsRes.ok) stats = await statsRes.json();
 
-    const historyRes = await fetch(`${baseUrl}/api/funding-history`, { cache: "no-store" });
+    const historyRes = await fetch(`${baseUrl}/api/funding-history`, {
+      cache: "no-store",
+    });
     if (historyRes.ok) history = await historyRes.json();
   } catch (error) {
     console.error("Error loading funding data:", error);
   }
 
   return (
-    <FundingClient 
-      user={session.user} 
-      totalFunding={stats.totalFunding} 
-      initialHistory={history} 
+    <FundingClient
+      user={session.user}
+      totalFunding={stats.totalFunding}
+      initialHistory={history}
     />
   );
 }
