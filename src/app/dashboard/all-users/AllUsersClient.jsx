@@ -1,10 +1,59 @@
 "use client";
 
-import { useState } from "react";
-import { EllipsisVertical } from "@gravity-ui/icons";
+import { useState, useEffect, useRef } from "react";
+import {
+  EllipsisVertical,
+  ShieldCheck,
+  Ban,
+  ArrowChevronDown,
+} from "@gravity-ui/icons";
 
 export default function AllUsersClient({ initialUsers }) {
   const [users, setUsers] = useState(initialUsers);
+  const [activeDropdown, setActiveDropdown] = useState(null); // কোন ইউজারের ড্রপডাউন ওপেন তা ট্র্যাক করবে
+  const dropdownRef = useRef(null);
+
+  // মেনুর বাইরে ক্লিক করলে ড্রপডাউন বন্ধ করার জন্য ইফেক্ট
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setActiveDropdown(null);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // রোল অথবা স্ট্যাটাস আপডেটের জন্য হ্যান্ডলার ফাংশন
+  const handleUpdateUser = async (userId, updateData) => {
+    setActiveDropdown(null); // ড্রপডাউন বন্ধ করা
+
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:5000";
+
+    try {
+      const res = await fetch(`${baseUrl}/api/users/update/${userId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updateData),
+      });
+
+      if (res.ok) {
+        // ক্লায়েন্ট সাইড স্টেট আপডেট করা যাতে পেজ রিফ্রেশ ছাড়া পরিবর্তন দেখা যায়
+        setUsers((prevUsers) =>
+          prevUsers.map((user) =>
+            user._id === userId ? { ...user, ...updateData } : user
+          )
+        );
+      } else {
+        alert("Failed to update user. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error updating user:", error);
+      alert("Something went wrong!");
+    }
+  };
 
   return (
     <div className="flex flex-col gap-6 animate-fade-in w-full">
@@ -41,7 +90,7 @@ export default function AllUsersClient({ initialUsers }) {
                     key={item._id}
                     className="hover:bg-brand-light/10 transition-colors"
                   >
-                    {/* সিরিয়াল */}
+                    {/* সিরিয়াল */}
                     <td className="px-6 py-4 text-center font-bold text-gray-300">
                       {(index + 1).toString().padStart(2, "0")}
                     </td>
@@ -102,11 +151,78 @@ export default function AllUsersClient({ initialUsers }) {
                       </span>
                     </td>
 
-                    {/* থ্রি-ডট অ্যাকশন মেনু */}
-                    <td className="px-6 py-4 text-center">
-                      <button className="p-1.5 hover:bg-gray-50 rounded-lg text-gray-400 hover:text-brand-dark transition-all">
+                    {/* থ্রি-ডট অ্যাকশন ড্রপডাউন মেনু */}
+                    <td className="px-6 py-4 text-center relative">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setActiveDropdown(
+                            activeDropdown === item._id ? null : item._id
+                          );
+                        }}
+                        className="p-1.5 hover:bg-gray-50 rounded-lg text-gray-400 hover:text-brand-dark transition-all"
+                      >
                         <EllipsisVertical className="w-4 h-4" />
                       </button>
+
+                      {/* ড্রপডাউন পপআপ */}
+                      {activeDropdown === item._id && (
+                        <div
+                          ref={dropdownRef}
+                          className="absolute right-12 top-2 mt-1 w-44 bg-white rounded-xl border border-gray-100 shadow-xl z-50 p-1.5 flex flex-col gap-0.5 text-left"
+                        >
+                          {/* রোল পরিবর্তন অপশন */}
+                          {roleLower !== "volunteer" ? (
+                            <button
+                              onClick={() =>
+                                handleUpdateUser(item._id, {
+                                  role: "volunteer",
+                                })
+                              }
+                              className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all"
+                            >
+                              <ShieldCheck className="w-3.5 h-3.5" /> Make
+                              Volunteer
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() =>
+                                handleUpdateUser(item._id, { role: "donor" })
+                              }
+                              className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold text-gray-600 hover:bg-gray-50 hover:text-brand-dark transition-all"
+                            >
+                              <ShieldCheck className="w-3.5 h-3.5" /> Make Donor
+                            </button>
+                          )}
+
+                          {/* বর্ডার ডিভাইডার */}
+                          <div className="border-t border-gray-50 my-1" />
+
+                          {/* স্ট্যাটাস ব্লক/আনব্লক অপশন */}
+                          {statusLower === "active" ? (
+                            <button
+                              onClick={() =>
+                                handleUpdateUser(item._id, {
+                                  status: "blocked",
+                                })
+                              }
+                              className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold text-red-500 hover:bg-red-50 transition-all"
+                            >
+                              <Ban className="w-3.5 h-3.5" /> Block User
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() =>
+                                handleUpdateUser(item._id, { status: "active" })
+                              }
+                              className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold text-emerald-600 hover:bg-emerald-50 transition-all"
+                            >
+                              <ArrowChevronDown className="w-3.5 h-3.5" />{" "}
+                              Unblock User
+                            </button>
+                          )}
+                        </div>
+                      )}
                     </td>
                   </tr>
                 );

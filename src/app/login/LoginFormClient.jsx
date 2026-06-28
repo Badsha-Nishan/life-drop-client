@@ -159,7 +159,7 @@ export default function LoginFormClient() {
               href="/register"
               className="text-brand-primary font-bold hover:underline transition-all"
             >
-              Create an Account
+              Create an Account to Donate
             </Link>
           </p>
         </div>

@@ -310,6 +310,7 @@ export default function MyRequestsClient({ user, initialRequests }) {
                 className="w-full bg-[#F8F9FA] border border-gray-100 px-4 py-3.5 rounded-2xl text-xs font-bold text-brand-dark focus:outline-none focus:bg-white focus:border-brand-primary transition-all"
               >
                 <option value="pending">Pending</option>
+                <option value="inprogress">Inprogress</option>
                 <option value="Done">Done</option>
               </select>
             </div>
@@ -358,6 +359,7 @@ export default function MyRequestsClient({ user, initialRequests }) {
               >
                 <option value="All">All Status</option>
                 <option value="pending">Pending</option>
+                <option value="inprogress">Inprogress</option>
                 <option value="Done">Done</option>
               </select>
             </div>
