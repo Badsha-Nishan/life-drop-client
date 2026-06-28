@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { authClient } from "@/lib/auth-client"; // আপনার প্রজেক্টের auth-client এর সঠিক পাথ দিন
+import { authClient } from "@/lib/auth-client";
 import {
   LayoutHeaderSideContent,
   Person,
@@ -13,22 +13,22 @@ import {
   Heart,
   Persons,
   Globe,
+  CircleArrowRight, // নতুন আইকন মোবাইল মেনুর জন্য
+  Xmark, // নতুন আইকন মেনু বন্ধ করার জন্য
 } from "@gravity-ui/icons";
 
 export default function DashboardLayout({ children }) {
   const pathname = usePathname();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false); // মোবাইল সাইডবার স্টেট
 
-  // ১. সেশন এবং ডাটাবেজ থেকে রিয়েল-টাইম ইউজার ডাটা রিট্রিভ করা
   useEffect(() => {
     async function fetchUserData() {
       try {
         const session = await authClient.getSession();
         if (session?.data?.user) {
           const sessionUser = session.data.user;
-
-          // ডাটাবেজের রিয়েল-টাইম রোল নিশ্চিত করতে এক্সপ্রেস এপিআই কল
           const baseUrl =
             process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:5000";
           const res = await fetch(`${baseUrl}/api/users/${sessionUser.email}`);
@@ -49,11 +49,9 @@ export default function DashboardLayout({ children }) {
     fetchUserData();
   }, []);
 
-  // ডিফল্ট রোল ট্র্যাকিং
   const userRole = user?.role || "donor";
   const isAdmin = userRole.toLowerCase() === "admin";
 
-  // ২. বেসিক মেনু আইটেমস (সবাই দেখবে)
   const mainMenu = [
     { name: "Dashboard", href: "/dashboard", icon: LayoutHeaderSideContent },
     { name: "My Profile", href: "/dashboard/profile", icon: Person },
@@ -68,7 +66,6 @@ export default function DashboardLayout({ children }) {
     },
   ];
 
-  // ৩. এডমিন এক্সক্লুসিভ ম্যানেজমেন্ট মেনু (`image_f23b2d.png` অনুযায়ী)
   const managementMenu = [
     { name: "All Users", href: "/dashboard/all-users", icon: Persons },
     {
@@ -78,10 +75,14 @@ export default function DashboardLayout({ children }) {
     },
   ];
 
-  // সাইটআউট হ্যান্ডলার
   const handleLogout = async () => {
     await authClient.signOut();
     window.location.href = "/login";
+  };
+
+  // মেনু লিংকে ক্লিক করলে মোবাইল সাইডবার অটো বন্ধ হবে
+  const handleLinkClick = () => {
+    setSidebarOpen(false);
   };
 
   if (loading) {
@@ -93,12 +94,40 @@ export default function DashboardLayout({ children }) {
   }
 
   return (
-    <div className="min-h-screen bg-[#F9FAFC] flex">
-      {/* ─── LEFT SIDEBAR ─── */}
-      <aside className="w-64 bg-white border-r border-gray-100 flex flex-col justify-between p-5 fixed h-full z-30">
+    <div className="min-h-screen bg-[#F9FAFC] flex flex-col md:flex-row">
+      {/* ─── MOBILE TOP BAR ─── */}
+      <div className="md:hidden flex items-center justify-between bg-white px-5 py-4 border-b border-gray-100 sticky top-0 z-40">
+        <Link href="/" className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-lg bg-brand-primary flex items-center justify-center text-white">
+            <Heart className="w-4 h-4 fill-white" />
+          </div>
+          <span className="text-lg font-black text-green-500 tracking-tight">
+            Life<span className="text-brand-primary">Drop</span>
+          </span>
+        </Link>
+        <button
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          className="p-1.5 rounded-lg bg-gray-50 text-brand-dark border border-gray-100"
+        >
+          {sidebarOpen ? (
+            <Xmark className="w-5 h-5" />
+          ) : (
+            <CircleArrowRight className="w-5 h-5" />
+          )}
+        </button>
+      </div>
+
+      {/* ─── LEFT SIDEBAR (Responsive) ─── */}
+      <aside
+        className={`
+        fixed inset-y-0 mt-34 left-0 z-30 w-64 bg-white border-r border-gray-100 flex flex-col justify-between p-5 transform transition-transform duration-300 ease-in-out h-full
+        md:translate-x-0 md:sticky md:top-0
+        ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
+      `}
+      >
         <div className="flex flex-col gap-8 overflow-y-auto max-h-[calc(100vh-160px)] no-scrollbar">
-          {/* Logo Section */}
-          <Link href="/" className="flex items-center gap-2 px-2">
+          {/* Logo Section (Hidden on mobile sidebar because of top bar) */}
+          <Link href="/" className="hidden md:flex items-center gap-2 px-2">
             <div className="w-7 h-7 rounded-lg bg-brand-primary flex items-center justify-center text-white">
               <Heart className="w-4 h-4 fill-white" />
             </div>
@@ -122,6 +151,7 @@ export default function DashboardLayout({ children }) {
                     <Link
                       key={item.href}
                       href={item.href}
+                      onClick={handleLinkClick}
                       className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
                         isActive
                           ? "bg-brand-primary text-white shadow-md shadow-brand-primary/10"
@@ -149,6 +179,7 @@ export default function DashboardLayout({ children }) {
                     <Link
                       key={item.href}
                       href={item.href}
+                      onClick={handleLinkClick}
                       className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
                         isActive
                           ? "bg-brand-primary text-white shadow-md shadow-brand-primary/10"
@@ -163,7 +194,7 @@ export default function DashboardLayout({ children }) {
               </nav>
             </div>
 
-            {/* 🌟 কন্ডিশনাল এডমিন ম্যানেজমেন্ট প্যানেল (image_f23b2d.png ম্যাচিং) */}
+            {/* Conditional Admin Panel */}
             {isAdmin && (
               <div>
                 <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-3 block mb-2">
@@ -177,6 +208,7 @@ export default function DashboardLayout({ children }) {
                       <Link
                         key={item.href}
                         href={item.href}
+                        onClick={handleLinkClick}
                         className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
                           isActive
                             ? "bg-brand-primary text-white shadow-md shadow-brand-primary/10"
@@ -220,10 +252,18 @@ export default function DashboardLayout({ children }) {
         </div>
       </aside>
 
+      {/* BACKDROP FOR MOBILE: সাইডবার ওপেন থাকলে বাইরের অংশে ক্লিক করলে বন্ধ হবে */}
+      {sidebarOpen && (
+        <div
+          onClick={() => setSidebarOpen(false)}
+          className="fixed inset-0 bg-black/20 z-20 md:hidden"
+        />
+      )}
+
       {/* ─── RIGHT CONTENT CONTAINER ─── */}
-      <div className="flex-1 pl-64 flex flex-col">
-        {/* Top Floating Header */}
-        <header className="h-16 bg-white border-b border-gray-100 px-8 sm:px-12 flex items-center justify-between sticky top-0 z-20">
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Top Floating Header (Hidden or adjusted for mobile) */}
+        <header className="h-16 bg-white border-b border-gray-100 px-4 sm:px-8 md:px-12 flex items-center justify-between sticky top-[65px] md:top-0 z-10">
           <div className="flex flex-col">
             <h1 className="text-sm font-black text-brand-dark tracking-tight">
               Dashboard
@@ -239,7 +279,7 @@ export default function DashboardLayout({ children }) {
         </header>
 
         {/* Dynamic Page Injector Panel */}
-        <main className="p-8 sm:p-12 flex-1 max-w-5xl w-full mx-auto">
+        <main className="p-4 sm:p-8 md:p-12 flex-1 max-w-5xl w-full mx-auto">
           {children}
         </main>
       </div>
