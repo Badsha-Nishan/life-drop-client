@@ -21,7 +21,10 @@ export default async function PublicRequestsPage() {
   });
   const dbUser = userRes.ok ? await userRes.json() : null;
 
-  if (dbUser?.role?.toLowerCase() !== "admin") {
+  const currentRole = (dbUser?.role || "donor").toLowerCase();
+
+  // 🌟 ফিক্সড লজিক: ইউজার যদি এডমিন অথবা ভলান্টিয়ার কোনোটিই না হয়, তবেই ড্যাশবোর্ডে রিডাইরেক্ট হবে
+  if (currentRole !== "admin" && currentRole !== "volunteer") {
     redirect("/dashboard");
   }
 
@@ -37,5 +40,10 @@ export default async function PublicRequestsPage() {
     console.error("Error fetching all donation requests:", error);
   }
 
-  return <PublicRequestsClient initialRequests={allRequests} />;
+  return (
+    <PublicRequestsClient
+      initialRequests={allRequests}
+      userRole={currentRole}
+    />
+  );
 }

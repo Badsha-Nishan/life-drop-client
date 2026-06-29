@@ -3,7 +3,6 @@ import DashboardClient from "./DashboardClient";
 import { headers } from "next/headers";
 
 export default async function DashboardPage() {
-  // ১. সার্ভার সাইড থেকে সেশন নেওয়া
   const session = await auth.api.getSession({
     headers: await headers(),
   });
@@ -14,10 +13,10 @@ export default async function DashboardPage() {
   let dbUser = null;
   let initialRequests = [];
   let adminStats = null;
+  let volunteerStats = null; // ভলান্টিয়ারের জন্য নতুন ডাটা হোল্ডার
 
   if (sessionEmail) {
     try {
-      // 🌟 ট্রিক: সেশনের রোলের ওপর ভরসা না করে সরাসরি ব্যাকএন্ড থেকে তাজা ডাটা আনা হচ্ছে
       const userRes = await fetch(`${baseUrl}/api/users/${sessionEmail}`, {
         cache: "no-store",
       });
@@ -26,19 +25,26 @@ export default async function DashboardPage() {
         dbUser = await userRes.json();
       }
 
-      // ২. ডাটাবেজ থেকে পাওয়া রিয়েল-টাইম রোল অনুযায়ী কন্ডিশনাল ডেটা ফেচিং
-      const currentRole = dbUser?.role || "donor";
+      const currentRole = (dbUser?.role || "donor").toLowerCase();
 
-      if (currentRole.toLowerCase() === "admin") {
-        // ইউজার এডমিন হলে এডমিন ড্যাশবোর্ডের স্ট্যাটস ফেচ হবে
+      // ৩টি রোলের জন্য কন্ডিশনাল ডাটা ফেচিং
+      if (currentRole === "admin") {
         const statsRes = await fetch(`${baseUrl}/api/admin/stats`, {
           cache: "no-store",
         });
         if (statsRes.ok) {
           adminStats = await statsRes.json();
         }
+      } else if (currentRole === "volunteer") {
+        // রিয়েল প্রজেক্ট রিকোয়ারমেন্ট: ভলান্টিয়ারের জন্য আলাদা কোনো এপিআই থাকলে তা এখানে আসবে
+        const volunteerRes = await fetch(`${baseUrl}/api/volunteer/stats`, {
+          cache: "no-store",
+        });
+        if (volunteerRes.ok) {
+          volunteerStats = await volunteerRes.json();
+        }
       } else {
-        // ইউজার সাধারণ ডোনার হলে শুধু তার নিজের ব্লাড রিকোয়েস্টগুলো ফেচ হবে
+        // সাধারণ donor হলে শুধুমাত্র তার নিজের তৈরি করা রিকোয়েস্টগুলো আসবে
         const res = await fetch(
           `${baseUrl}/api/donation-request/${sessionEmail}`,
           {
@@ -54,11 +60,10 @@ export default async function DashboardPage() {
     }
   }
 
-  // ৩. ফাইনাল ইউজার অবজেক্ট তৈরি (ডাটাবেজের রিয়েল-টাইম রোল সহ)
   const user = {
     name: dbUser?.name || session?.user?.name || "Guest User",
     email: sessionEmail || "",
-    role: dbUser?.role || "donor", // এখানে এখন ডাটাবেজের 'admin' রোলটি আসবে
+    role: dbUser?.role || "donor",
   };
 
   return (
@@ -66,6 +71,7 @@ export default async function DashboardPage() {
       user={user}
       initialRequests={initialRequests}
       adminStats={adminStats}
+      volunteerStats={volunteerStats} // ক্লায়েন্ট কম্পোনেন্টে প্রপ পাস করা হলো
     />
   );
 }

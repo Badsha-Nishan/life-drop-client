@@ -9,23 +9,34 @@ import {
   CopyTransparent,
 } from "@gravity-ui/icons";
 
-export default function DashboardClient({ user, initialRequests, adminStats }) {
-  // ১. ইউজারের রোল ট্র্যাকিং (কেস ইনসেনসিটিভ হ্যান্ডেল করার জন্য লোয়ারকেস চেক করা ভালো)
-  const userRole = user?.role || "donor";
-  const isAdmin = userRole.toLowerCase() === "admin";
+export default function DashboardClient({
+  user,
+  initialRequests,
+  adminStats,
+  volunteerStats,
+}) {
+  // ১. ইউজারের রোল ট্র্যাকিং (কেস ইনসেনসিটিভ হ্যান্ডেল করা হয়েছে)
+  const userRole = (user?.role || "donor").toLowerCase();
+  const isAdmin = userRole === "admin";
+  const isVolunteer = userRole === "volunteer";
 
-  // ২. রেগুলার ডোনারদের রিকোয়েস্ট ডেটা সেটআপ
+  // এডমিন অথবা ভলান্টিয়ার উভয়েই ড্যাশবোর্ড স্ট্যাটস ভিউ দেখতে পাবেন
+  const isManagement = isAdmin || isVolunteer;
+
+  // ২. রেগুলার ডোনারদের রিকোয়েস্ট ডেটা সেটআপ
   const requests = Array.isArray(initialRequests) ? initialRequests : [];
   const recentRequests = [...requests]
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
     .slice(0, 3);
 
-  // ৩. এডমিন স্ট্যাটস ডেটা (সার্ভার থেকে না আসলে স্ক্রিনশটের ডিফল্ট ভ্যালু দেখাবে)
-  const stats = adminStats || {
-    totalDonors: 16,
-    totalFunding: 12886,
-    bloodRequests: 20,
-  };
+  // ৩. এডমিন এবং ভলান্টিয়ারের জন্য স্ট্যাটস ডেটা কম্বাইন হ্যান্ডেলিং
+  // সার্ভার থেকে নির্দিষ্ট ডেটা না আসলে ডিফল্ট ফলব্যাক ভ্যালু দেখাবে
+  const stats = adminStats ||
+    volunteerStats || {
+      totalDonors: 16,
+      totalFunding: 12886,
+      bloodRequests: 20,
+    };
 
   return (
     <div className="flex flex-col gap-6 animate-fade-in p-4 sm:p-6 max-w-5xl mx-auto w-full">
@@ -38,15 +49,15 @@ export default function DashboardClient({ user, initialRequests, adminStats }) {
         <p className="text-sm text-gray-400 font-medium mt-1">
           Role:{" "}
           <span className="text-brand-dark font-black uppercase text-[10px] bg-brand-light/80 px-2.5 py-1 rounded-md tracking-wider">
-            {userRole}
+            {user?.role || "donor"}
           </span>{" "}
           • Manage your activities and help save lives today.
         </p>
       </div>
 
-      {/* ─── ২. কন্ডিশনাল ড্যাশবোর্ড ভিউ (Admin বনাম Donor) ─── */}
-      {isAdmin ? (
-        /* 🌟 ADMIN VIEW: ৩টি স্ট্যাটস কার্ড (হুবহু image_e7c27f.png স্ক্রিনশটের মতো) */
+      {/* ─── ২. কন্ডিশনাল ড্যাশবোর্ড ভিউ (Management বনাম Donor) ─── */}
+      {isManagement ? (
+        /* 🌟 MANAGEMENT VIEW: Admin এবং Volunteer উভয়েই এই স্ট্যাটস কার্ডগুলো দেখতে পাবেন */
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-4">
           {/* কার্ড ১: Total Donors */}
           <div className="bg-white border border-gray-100 rounded-[32px] p-6 shadow-sm flex flex-col justify-between relative overflow-hidden group">
@@ -118,7 +129,6 @@ export default function DashboardClient({ user, initialRequests, adminStats }) {
           <div className="bg-white border border-gray-100 rounded-[32px] p-6 shadow-sm flex flex-col justify-between relative overflow-hidden group">
             <div className="flex justify-between items-start">
               <div className="w-12 h-12 rounded-2xl bg-red-50 flex items-center justify-center text-brand-primary">
-                {/* হুবহু স্ক্রিনশটের ব্লাড ড্রপ ড্রপ ডিজাইন */}
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 24 24"
@@ -143,7 +153,7 @@ export default function DashboardClient({ user, initialRequests, adminStats }) {
           </div>
         </div>
       ) : (
-        /* 🩸 DONOR VIEW: সাম্প্রতিক রিকোয়েস্টের তালিকা বা এম্পটি স্টেট */
+        /* 🩸 DONOR VIEW: সাম্প্রতিক রিকোয়েস্টের তালিকা বা এম্পটি স্টেট */
         <>
           {recentRequests.length > 0 ? (
             <div className="flex flex-col gap-3 mt-4">

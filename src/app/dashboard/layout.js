@@ -13,15 +13,15 @@ import {
   Heart,
   Persons,
   Globe,
-  CircleArrowRight, // নতুন আইকন মোবাইল মেনুর জন্য
-  Xmark, // নতুন আইকন মেনু বন্ধ করার জন্য
+  CircleArrowRight,
+  Xmark,
 } from "@gravity-ui/icons";
 
 export default function DashboardLayout({ children }) {
   const pathname = usePathname();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [sidebarOpen, setSidebarOpen] = useState(false); // মোবাইল সাইডবার স্টেট
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     async function fetchUserData() {
@@ -49,8 +49,11 @@ export default function DashboardLayout({ children }) {
     fetchUserData();
   }, []);
 
-  const userRole = user?.role || "donor";
-  const isAdmin = userRole.toLowerCase() === "admin";
+  const userRole = (user?.role || "donor").toLowerCase();
+
+  const isAdmin = userRole === "admin";
+  const isVolunteer = userRole === "volunteer";
+  const isManagement = isAdmin || isVolunteer;
 
   const mainMenu = [
     { name: "Dashboard", href: "/dashboard", icon: LayoutHeaderSideContent },
@@ -66,23 +69,29 @@ export default function DashboardLayout({ children }) {
     },
   ];
 
-  const managementMenu = [
-    { name: "All Users", href: "/dashboard/all-users", icon: Persons },
-    {
+  // রোল অনুযায়ী ম্যানেজমেন্ট মেনু ফিল্টার করার ডাইনামিক লজিক
+  const managementMenu = [];
+
+  // ১. অল ইউজারস কেবল এডমিন দেখতে পারবে
+  if (isAdmin) {
+    managementMenu.push({
+      name: "All Users",
+      href: "/dashboard/all-users",
+      icon: Persons,
+    });
+  }
+  // ২. পাবলিক রিকোয়েস্ট এডমিন এবং ভলান্টিয়ার উভয়েই দেখতে পারবে
+  if (isAdmin || isVolunteer) {
+    managementMenu.push({
       name: "Public Requests",
       href: "/dashboard/public-requests",
       icon: Globe,
-    },
-  ];
+    });
+  }
 
   const handleLogout = async () => {
     await authClient.signOut();
     window.location.href = "/login";
-  };
-
-  // মেনু লিংকে ক্লিক করলে মোবাইল সাইডবার অটো বন্ধ হবে
-  const handleLinkClick = () => {
-    setSidebarOpen(false);
   };
 
   if (loading) {
@@ -117,16 +126,15 @@ export default function DashboardLayout({ children }) {
         </button>
       </div>
 
-      {/* ─── LEFT SIDEBAR (Responsive) ─── */}
+      {/* ─── LEFT SIDEBAR ─── */}
       <aside
         className={`
-        fixed inset-y-0 mt-34 left-0 z-30 w-64 bg-white border-r border-gray-100 flex flex-col justify-between p-5 transform transition-transform duration-300 ease-in-out h-full
+        fixed inset-y-0 left-0 z-30 w-64 bg-white border-r border-gray-100 flex flex-col justify-between p-5 transform transition-transform duration-300 ease-in-out h-full
         md:translate-x-0 md:sticky md:top-0
         ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
       `}
       >
         <div className="flex flex-col gap-8 overflow-y-auto max-h-[calc(100vh-160px)] no-scrollbar">
-          {/* Logo Section (Hidden on mobile sidebar because of top bar) */}
           <Link href="/" className="hidden md:flex items-center gap-2 px-2">
             <div className="w-7 h-7 rounded-lg bg-brand-primary flex items-center justify-center text-white">
               <Heart className="w-4 h-4 fill-white" />
@@ -136,7 +144,6 @@ export default function DashboardLayout({ children }) {
             </span>
           </Link>
 
-          {/* Navigation Links */}
           <div className="flex flex-col gap-5">
             {/* Main Menu */}
             <div>
@@ -151,7 +158,7 @@ export default function DashboardLayout({ children }) {
                     <Link
                       key={item.href}
                       href={item.href}
-                      onClick={handleLinkClick}
+                      onClick={() => setSidebarOpen(false)}
                       className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
                         isActive
                           ? "bg-brand-primary text-white shadow-md shadow-brand-primary/10"
@@ -179,7 +186,7 @@ export default function DashboardLayout({ children }) {
                     <Link
                       key={item.href}
                       href={item.href}
-                      onClick={handleLinkClick}
+                      onClick={() => setSidebarOpen(false)}
                       className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
                         isActive
                           ? "bg-brand-primary text-white shadow-md shadow-brand-primary/10"
@@ -194,8 +201,8 @@ export default function DashboardLayout({ children }) {
               </nav>
             </div>
 
-            {/* Conditional Admin Panel */}
-            {isAdmin && (
+            {/* Management Panel (নিয়ন্ত্রিত ডাইনামিক পুশ লজিক) */}
+            {isManagement && managementMenu.length > 0 && (
               <div>
                 <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-3 block mb-2">
                   Management
@@ -208,7 +215,7 @@ export default function DashboardLayout({ children }) {
                       <Link
                         key={item.href}
                         href={item.href}
-                        onClick={handleLinkClick}
+                        onClick={() => setSidebarOpen(false)}
                         className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
                           isActive
                             ? "bg-brand-primary text-white shadow-md shadow-brand-primary/10"
@@ -226,7 +233,7 @@ export default function DashboardLayout({ children }) {
           </div>
         </div>
 
-        {/* Bottom Profile Info & Logout */}
+        {/* Profile Info */}
         <div className="flex flex-col gap-3 pt-4 border-t border-gray-100">
           <div className="flex items-center gap-3 px-2 py-1">
             <div className="w-9 h-9 rounded-xl bg-brand-primary/10 text-brand-primary flex items-center justify-center font-black text-sm shrink-0">
@@ -252,7 +259,6 @@ export default function DashboardLayout({ children }) {
         </div>
       </aside>
 
-      {/* BACKDROP FOR MOBILE: সাইডবার ওপেন থাকলে বাইরের অংশে ক্লিক করলে বন্ধ হবে */}
       {sidebarOpen && (
         <div
           onClick={() => setSidebarOpen(false)}
@@ -260,25 +266,23 @@ export default function DashboardLayout({ children }) {
         />
       )}
 
-      {/* ─── RIGHT CONTENT CONTAINER ─── */}
+      {/* ─── RIGHT CONTAINER ─── */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Top Floating Header (Hidden or adjusted for mobile) */}
-        <header className="h-16 bg-white border-b border-gray-100 px-4 sm:px-8 md:px-12 flex items-center justify-between sticky top-[65px] md:top-0 z-10">
+        <header className="h-16 bg-white border-b border-gray-100 px-4 sm:px-8 md:px-12 flex items-center justify-between sticky top-0 z-10">
           <div className="flex flex-col">
             <h1 className="text-sm font-black text-brand-dark tracking-tight">
               Dashboard
             </h1>
             <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">
-              Welcome back, {userRole}
+              Welcome back, {user?.role || "donor"}
             </span>
           </div>
 
           <span className="text-[10px] font-black text-brand-primary tracking-widest uppercase bg-brand-primary/5 px-2.5 py-1 rounded-md">
-            {userRole}
+            {user?.role || "donor"}
           </span>
         </header>
 
-        {/* Dynamic Page Injector Panel */}
         <main className="p-4 sm:p-8 md:p-12 flex-1 max-w-5xl w-full mx-auto">
           {children}
         </main>
